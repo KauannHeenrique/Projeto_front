@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -20,7 +19,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // Simulando 
+      // Simulando autenticação
       await new Promise(resolve => setTimeout(resolve, 500))
       
       // Permite qualquer usuário e senha

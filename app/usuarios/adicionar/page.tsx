@@ -10,7 +10,11 @@ interface User {
   name: string
   email: string
   phone: string
+  document: string
   accessLevel: string
+  apartment: string
+  block: string
+  apartmentNumber: string
 }
 
 export default function AddUser() {
@@ -19,7 +23,11 @@ export default function AddUser() {
     name: "",
     email: "",
     phone: "",
-    accessLevel: "morador"
+    document: "",
+    accessLevel: "morador",
+    apartment: "",
+    block: "",
+    apartmentNumber: ""
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -79,6 +87,44 @@ export default function AddUser() {
             required
             disabled={isLoading}
           />
+
+          <Input 
+            name="document"
+            placeholder="Documento (CPF/RG)"
+            value={formData.document}
+            onChange={(e) => setFormData({...formData, document: e.target.value})}
+            required
+            disabled={isLoading}
+          />
+
+          <div className="grid grid-cols-3 gap-4">
+            <Input 
+              name="block"
+              placeholder="Bloco"
+              value={formData.block}
+              onChange={(e) => setFormData({...formData, block: e.target.value})}
+              required
+              disabled={isLoading}
+            />
+            
+            <Input 
+              name="apartment"
+              placeholder="Apartamento"
+              value={formData.apartment}
+              onChange={(e) => setFormData({...formData, apartment: e.target.value})}
+              required
+              disabled={isLoading}
+            />
+            
+            <Input 
+              name="apartmentNumber"
+              placeholder="Número"
+              value={formData.apartmentNumber}
+              onChange={(e) => setFormData({...formData, apartmentNumber: e.target.value})}
+              required
+              disabled={isLoading}
+            />
+          </div>
           
           <select 
             name="accessLevel"

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -22,6 +23,12 @@ import {
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const router = useRouter()
+
+  const handleLogout = () => {
+    // Aqui você pode adicionar lógica para limpar tokens ou dados de sessão se necessário
+    router.push('/login') // Redireciona para a página de login
+  }
 
   return (
     <header className="bg-white shadow">
@@ -79,7 +86,7 @@ export function Header() {
                   <Settings className="h-4 w-4 mr-2" />
                   Configurações
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
                 </DropdownMenuItem>

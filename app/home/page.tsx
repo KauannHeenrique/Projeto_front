@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -98,15 +98,15 @@ export default function Home() {
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow">
-            <Link href="/acessos/registrar">
+          <Link href="/acessos/registrar">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-green-100 p-3">
                     <Plus className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium">Registrar Acesso</h3>
-                    <p className="text-sm text-gray-500">Registrar entrada ou saída</p>
+                    <h3 className="font-medium">Gerenciar Acessos</h3>
+                    <p className="text-sm text-gray-500">Consultar ou Registrar entrada</p>
                   </div>
                 </div>
               </CardContent>
@@ -114,7 +114,7 @@ export default function Home() {
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow">
-            <Link href="/alertas">
+            <Link href="/alertas" passHref >
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-red-100 p-3">

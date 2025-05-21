@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   Users, 
   KeyRound, 
@@ -9,45 +10,66 @@ import {
   Calendar, 
   Clock,
   AlertCircle,
-  Plus
-} from "lucide-react"
-import Link from "next/link"
-import { Header } from "@/components/header"
+  Plus,
+  HomeIcon,
+  PlusIcon
+} from "lucide-react";
+import Link from "next/link";
+import { Header } from "@/components/header";
 
 interface Activity {
-  id: number
-  type: string
-  description: string
-  time: string
-  status: "success" | "error"
+  id: number;
+  type: string;
+  description: string;
+  time: string;
+  status: "success" | "error";
 }
 
-// Mock data - replace with actual API data
-const recentActivities: Activity[] = []
+const recentActivities: Activity[] = [];
 
 export default function Home() {
+  const [totalUsuarios, setTotalUsuarios] = useState<number>(0);
+
+  useEffect(() => {
+    async function fetchUsuarios() {
+      try {
+        const response = await fetch("http://localhost:5263/api/Usuario/ExibirTodosUsuarios"); // ajuste a rota se necessário
+        const data = await response.json();
+        setTotalUsuarios(data.length);
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
+      }
+    }
+
+    fetchUsuarios();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+              <CardTitle className="text-sm font-medium">Total de usuários</CardTitle>
               <Users className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-gray-500">Nenhum usuário cadastrado</p>
+              <div className="text-2xl font-bold">{totalUsuarios}</div>
+              <p className="text-xs text-gray-500">
+                {totalUsuarios === 0
+                  ? "Nenhum usuário cadastrado"
+                  : `${totalUsuarios} usuário(s) cadastrados`}
+              </p>
             </CardContent>
           </Card>
 
+          {/* Os demais cards seguem inalterados */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Acessos Hoje</CardTitle>
+              <CardTitle className="text-sm font-medium">Acessos hoje</CardTitle>
               <KeyRound className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
@@ -58,7 +80,7 @@ export default function Home() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Alertas Ativos</CardTitle>
+              <CardTitle className="text-sm font-medium">Alertas ativos</CardTitle>
               <AlertCircle className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
@@ -69,7 +91,7 @@ export default function Home() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tempo Médio de Acesso</CardTitle>
+              <CardTitle className="text-sm font-medium">Tempo médio de acesso</CardTitle>
               <Clock className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
@@ -89,7 +111,7 @@ export default function Home() {
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium">Gerenciar Usuários</h3>
+                    <h3 className="font-medium">Gerenciar usuários</h3>
                     <p className="text-sm text-gray-500">Adicionar, editar ou remover usuários</p>
                   </div>
                 </div>
@@ -98,15 +120,15 @@ export default function Home() {
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow">
-          <Link href="/acessos/registrar">
+            <Link href="/apartamentos">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-green-100 p-3">
-                    <Plus className="h-6 w-6 text-green-600" />
+                    <HomeIcon className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium">Gerenciar Acessos</h3>
-                    <p className="text-sm text-gray-500">Consultar ou Registrar entrada</p>
+                    <h3 className="font-medium">Gerenciar apartamentos</h3>
+                    <p className="text-sm text-gray-500">Adicionar ou editar apartamento</p>
                   </div>
                 </div>
               </CardContent>
@@ -114,15 +136,15 @@ export default function Home() {
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow">
-            <Link href="/alertas" passHref >
+            <Link href="/alertas" passHref>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-red-100 p-3">
-                    <Bell className="h-6 w-6 text-red-600" />
+                    <PlusIcon className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium">Ver Alertas</h3>
-                    <p className="text-sm text-gray-500">Visualizar e gerenciar alertas</p>
+                    <h3 className="font-medium">Gerenciar acessos</h3>
+                    <p className="text-sm text-gray-500">Consultar ou registrar entrada</p>
                   </div>
                 </div>
               </CardContent>
@@ -168,5 +190,5 @@ export default function Home() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

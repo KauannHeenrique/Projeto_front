@@ -18,12 +18,14 @@ import {
   Settings,
   X
 } from "lucide-react"
+import Cookies from "js-cookie"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await Cookies.remove('auth_token')
     router.push('/login')
   }
 

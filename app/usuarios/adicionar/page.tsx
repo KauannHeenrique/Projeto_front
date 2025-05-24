@@ -171,7 +171,7 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
     setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
 
     try {
-      const response = await fetch("http://192.168.113.43/read-rfid");
+      const response = await fetch("http://192.168.1.87/read-rfid");
       const data = await response.json();
 
       if (data.uid) {

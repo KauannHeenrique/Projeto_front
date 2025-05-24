@@ -226,7 +226,7 @@ export default function UsuariosPage() {
     <table className="min-w-full text-sm text-center text-gray-600">
       <thead className="text-xs text-gray-700 uppercase bg-gray-100">
         <tr>
-          <th scope="col" className="px-4 py-3">Nome</th>
+          <th scope="col" className="px-4 py-3 text-left">Nome</th>
           <th scope="col" className="px-4 py-3">Bloco</th>
           <th scope="col" className="px-4 py-3">Apartamento</th>
           <th scope="col" className="px-4 py-3">Nível de Acesso</th>
@@ -240,7 +240,7 @@ export default function UsuariosPage() {
             className="border-b hover:bg-gray-50 transition cursor-pointer"
             onClick={() => router.push(`/usuarios/${user.id}`)}
           >
-            <td className="px-4 py-3">{user.nome}</td>
+            <td className="px-4 py-3 text-left font-bold capitalize">{user.nome}</td>
             <td className="px-4 py-3">{user.bloco}</td>
             <td className="px-4 py-3">{user.numero}</td>
             <td className="px-4 py-3">{user.accessLevel}</td>

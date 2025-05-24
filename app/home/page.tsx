@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/header";
+import api from "@/services/api";
 
 interface Activity {
   id: number;
@@ -29,20 +30,34 @@ const recentActivities: Activity[] = [];
 
 export default function Home() {
   const [totalUsuarios, setTotalUsuarios] = useState<number>(0);
+  const [totalApartamentos, setTotalApartamentos] = useState<number>(0);
+  const [totalEntradas, setTotalEntradas] = useState<number>(0);
 
-  useEffect(() => {
-    async function fetchUsuarios() {
-      try {
-        const response = await fetch("http://localhost:5263/api/Usuario/ExibirTodosUsuarios"); // ajuste a rota se necessário
-        const data = await response.json();
-        setTotalUsuarios(data.length);
-      } catch (error) {
-        console.error("Erro ao buscar usuários:", error);
-      }
+
+useEffect(() => {
+  async function fetchData() {
+    try {
+      const [usuariosResponse, apartamentosResponse, entradaResponse] = await Promise.all([
+        api.get("/Usuario/ExibirTodosUsuarios"),
+        api.get("/Apartamento/ExibirTodosApartamentos"),
+        api.get('/AcessoEntradaMorador/ListarEntradas')
+      ]);
+
+      const usuarios = usuariosResponse.data;
+      const apartamentos = apartamentosResponse.data;
+      const entradas = entradaResponse.data;
+
+      setTotalUsuarios(usuarios.length);
+      setTotalApartamentos(apartamentos.length);
+      setTotalEntradas(entradas.length);
+      
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
     }
+  }
 
-    fetchUsuarios();
-  }, []);
+  fetchData();
+}, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,7 +76,7 @@ export default function Home() {
               <p className="text-xs text-gray-500">
                 {totalUsuarios === 0
                   ? "Nenhum usuário cadastrado"
-                  : `${totalUsuarios} usuário(s) cadastrados`}
+                  : `${totalUsuarios} usuário(s) cadastrado(s)`}
               </p>
             </CardContent>
           </Card>
@@ -69,13 +84,32 @@ export default function Home() {
           {/* Os demais cards seguem inalterados */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de apartamentos</CardTitle>
+              <HomeIcon className="h-4 w-4 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalApartamentos}</div>
+              <p className="text-xs text-gray-500">
+                {totalApartamentos === 0
+                  ? "Nenhum apartamento cadastrado"
+                  : `${totalApartamentos} apartamento(s) cadastrado(s)`}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Acessos hoje</CardTitle>
               <KeyRound className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-gray-500">Nenhum acesso registrado hoje</p>
-            </CardContent>
+              <div className="text-2xl font-bold">{totalEntradas}</div>
+              <p className="text-xs text-gray-500">
+                {totalEntradas === 0
+                  ? "Nenhum acesso registrado"
+                  : `${totalEntradas} entrada(s) registrada(s)`}
+              </p>            
+              </CardContent>
           </Card>
 
           <Card>
@@ -86,17 +120,6 @@ export default function Home() {
             <CardContent>
               <div className="text-2xl font-bold">0</div>
               <p className="text-xs text-gray-500">Nenhum alerta ativo</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tempo médio de acesso</CardTitle>
-              <Clock className="h-4 w-4 text-gray-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0 min</div>
-              <p className="text-xs text-gray-500">Nenhum acesso registrado</p>
             </CardContent>
           </Card>
         </div>

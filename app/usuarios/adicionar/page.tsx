@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { FiSearch } from "react-icons/fi"; // ícone lupa
+import { FiSearch } from "react-icons/fi";
 
 interface FormData {
   name: string;
@@ -65,6 +66,16 @@ export default function AddUser() {
     };
   }, [popoverOpen]);
 
+  // Limpar apartmentId e erros quando accessLevel mudar para funcionario
+  useEffect(() => {
+    if (formData.accessLevel === "funcionario") {
+      setFormData((prev) => ({ ...prev, apartmentId: "" }));
+      setBloco("");
+      setNumero("");
+      setErrors((prev) => ({ ...prev, apartmentId: undefined }));
+    }
+  }, [formData.accessLevel]);
+
   const formatPhone = (value: string): string => {
     const digits = value.replace(/\D/g, "");
     if (digits.length <= 2) return digits;
@@ -103,28 +114,27 @@ export default function AddUser() {
 
     try {
       const queryParams = new URLSearchParams();
-    queryParams.append("bloco", bloco);    // sempre adiciona, mesmo vazio
-    queryParams.append("numero", numero);  // sempre adiciona, mesmo vazio
+      queryParams.append("bloco", bloco);
+      queryParams.append("numero", numero);
 
       const url = `${API_URL}/api/Apartamento/BuscarApartamentoPor?${queryParams.toString()}`;
-      console.log("URL da requisição:", url);  // Aqui imprime a URL string
-const response = await fetch(url);
-console.log("Resposta da API:", response); // Aqui imprime o objeto Response
+      console.log("Buscando apartamento - URL:", url);
+      const response = await fetch(url);
+      console.log("Resposta da API (apartamento):", response.status, response.statusText);
 
-    const data = await response.json();
-    console.log("Dados recebidos da API:", data);
-
+      const data = await response.json();
+      console.log("Dados recebidos da API (apartamento):", data);
 
       if (response.ok && Array.isArray(data) && data.length > 0) {
-  setFormData({ ...formData, apartmentId: data[0].id.toString() });
-  setApiError("Apartamento encontrado com sucesso!");
-} else {
-  setFormData({ ...formData, apartmentId: "" });
-  setApiError("Apartamento não encontrado.");
-}
+        setFormData({ ...formData, apartmentId: data[0].id.toString() });
+        setApiError("Apartamento encontrado com sucesso!");
+      } else {
+        setFormData({ ...formData, apartmentId: "" });
+        setApiError("Apartamento não encontrado.");
+      }
     } catch (err) {
       setApiError("Erro ao buscar apartamento.");
-      console.error(err);
+      console.error("Erro ao buscar apartamento:", err);
     }
   };
 
@@ -151,12 +161,14 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
       newErrors.document = "RG inválido.";
     }
 
-    const apartmentIdNum = parseInt(formData.apartmentId);
-    if (!formData.apartmentId.trim()) newErrors.apartmentId = "O apartamento é obrigatório.";
-    else if (isNaN(apartmentIdNum) || apartmentIdNum <= 0) newErrors.apartmentId = "ID inválido.";
-
     const validAccessLevels = ["funcionario", "sindico", "morador"];
     if (!validAccessLevels.includes(formData.accessLevel)) newErrors.accessLevel = "Selecione um nível válido.";
+
+    if (formData.accessLevel !== "funcionario") {
+      const apartmentIdNum = parseInt(formData.apartmentId);
+      if (!formData.apartmentId.trim()) newErrors.apartmentId = "O apartamento é obrigatório.";
+      else if (isNaN(apartmentIdNum) || apartmentIdNum <= 0) newErrors.apartmentId = "ID inválido.";
+    }
 
     if (formData.codigoRFID && !/^[a-zA-Z0-9]{8}$/.test(formData.codigoRFID))
       newErrors.codigoRFID = "O código RFID deve ter 8 caracteres alfanuméricos.";
@@ -172,7 +184,9 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
 
     try {
       const response = await fetch("http://192.168.1.87/read-rfid");
+      console.log("Resposta da API (RFID):", response.status, response.statusText);
       const data = await response.json();
+      console.log("Dados recebidos da API (RFID):", data);
 
       if (data.uid) {
         setFormData({ ...formData, codigoRFID: data.uid });
@@ -183,6 +197,7 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
       }
     } catch (err) {
       setApiError("Erro ao comunicar com o ESP32.");
+      console.error("Erro ao ler RFID:", err);
       setFormData({ ...formData, codigoRFID: "" });
     } finally {
       setTimeout(() => setIsLoading(false), 500);
@@ -199,6 +214,7 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setIsLoading(false);
+      console.log("Erros de validação:", validationErrors);
       return;
     }
 
@@ -215,11 +231,13 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
         Telefone: formData.phone.replace(/\D/g, ""),
         Documento: formData.document.replace(/[\.\-]/g, ""),
         NivelAcesso: nivelAcessoMap[formData.accessLevel],
-        ApartamentoId: parseInt(formData.apartmentId) || 0,
+        ApartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(formData.apartmentId) || null,
         CodigoRFID: formData.codigoRFID || null,
         Senha: "default123",
         Status: true,
       };
+
+      console.log("Enviando dados para a API:", usuario);
 
       const response = await fetch(`${API_URL}/api/Usuario/AdicionarUsuario`, {
         method: "POST",
@@ -229,25 +247,28 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
         body: JSON.stringify(usuario),
       });
 
+      console.log("Resposta da API (cadastro):", response.status, response.statusText);
       const data = await response.json();
+      console.log("Dados recebidos da API (cadastro):", data);
+
       if (response.ok) {
-        setApiError("Usuário criado com sucesso!");
+        setApiError("Morador cadastrado com sucesso!");
         setTimeout(() => router.push("/usuarios"), 2000);
       } else {
-        setApiError(data.mensagem || "Falha ao criar usuário");
+        setApiError(data.mensagem || `Falha ao cadastrar morador: ${response.statusText}`);
       }
     } catch (err) {
-      setApiError("Erro ao conectar com a API");
-      console.error(err);
+      setApiError("Erro ao conectar com a API. Verifique sua conexão ou tente novamente.");
+      console.error("Erro ao cadastrar morador:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Adicionar Usuário</h1>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Adicionar Morador</h1>
 
         {apiError && (
           <div
@@ -261,153 +282,170 @@ console.log("Resposta da API:", response); // Aqui imprime o objeto Response
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            name="name"
-            placeholder="Nome"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            disabled={isLoading}
-          />
-          {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Linha 1: Nome e Email */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Nome completo"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={isLoading}
+                className="border border-gray-300 focus:border-indigo-500"
+              />
+              {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+            </div>
 
-          <Input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            disabled={isLoading}
-          />
-          {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="morador@condominio.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled={isLoading}
+                className="border border-gray-300 focus:border-indigo-500"
+              />
+              {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
+            </div>
+          </div>
 
-          <Input
-            name="phone"
-            placeholder="Telefone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-            disabled={isLoading}
-          />
-          {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+          {/* Linha 2: Telefone e Documento */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
+              <Input
+                id="phone"
+                name="phone"
+                placeholder="(99) 99999-9999"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                disabled={isLoading}
+                className="border border-gray-300 focus:border-indigo-500"
+              />
+              {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
+            </div>
 
-          <Input
-            name="document"
-            placeholder="Documento (CPF/RG)"
-            value={formData.document}
-            onChange={(e) => {
-              let value = e.target.value;
-              const digits = value.replace(/\D/g, "");
-              if (digits.length <= 11 && /^\d*$/.test(digits)) {
-                value = formatCPF(value);
-              }
-              setFormData({ ...formData, document: value });
-            }}
-            disabled={isLoading}
-          />
-          {errors.document && <p className="text-sm text-red-600">{errors.document}</p>}
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
+              <Input
+                id="document"
+                name="document"
+                placeholder="000.000.000-00"
+                value={formData.document}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  const digits = value.replace(/\D/g, "");
+                  if (digits.length <= 11 && /^\d*$/.test(digits)) {
+                    value = formatCPF(value);
+                  }
+                  setFormData({ ...formData, document: value });
+                }}
+                disabled={isLoading}
+                className="border border-gray-300 focus:border-indigo-500"
+              />
+              {errors.document && <p className="text-sm text-red-600 mt-1">{errors.document}</p>}
+            </div>
+          </div>
 
-          {/* Campo apartamentoId com netcode ao lado */}
-          <div className="flex items-center gap-2 relative">
-  <Input
-    name="apartmentId"
-    placeholder="ID do Apartamento"
-    value={formData.apartmentId}
-    readOnly
-    disabled
-    className="flex-grow"
-  />
-  <div className="relative">
-    <button
-      type="button"
-      onClick={() => setPopoverOpen((open) => !open)}
-      aria-label="Buscar apartamento"
-      className="p-2 rounded bg-indigo-500 text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-    >
-      <FiSearch size={20} />
-    </button>
+          {/* Linha 3: Código RFID e Buscar Apartamento */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
+              <div className="flex gap-2">
+                <Input
+                  id="codigoRFID"
+                  name="codigoRFID"
+                  placeholder="Ex: ABCD1234"
+                  value={formData.codigoRFID}
+                  onChange={(e) => setFormData({ ...formData, codigoRFID: e.target.value.toUpperCase() })}
+                  disabled={isLoading}
+                  className="border border-gray-300 focus:border-indigo-500 flex-grow"
+                />
+                <Button
+                  type="button"
+                  onClick={handleReadRFID}
+                  disabled={isLoading}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
+                >
+                  {isLoading ? "Lendo..." : "Ler RFID"}
+                </Button>
+              </div>
+              {errors.codigoRFID && <p className="text-sm text-red-600 mt-1">{errors.codigoRFID}</p>}
+            </div>
 
-    {popoverOpen && (
-      <div
-        ref={popoverRef}
-        className="absolute right-full top-1/2 -translate-y-1/2 ml-2 w-64 p-4 bg-white border border-gray-300 rounded shadow-lg z-50"
-      >
-        <Input
-          name="bloco"
-          placeholder="Bloco"
-          value={bloco}
-          onChange={(e) => setBloco(e.target.value)}
-          disabled={isLoading}
-        />
-        <Input
-          name="numero"
-          placeholder="Número"
-          value={numero}
-          onChange={(e) => setNumero(e.target.value)}
-          disabled={isLoading}
-          className="mt-2"
-        />
-        <Button
-          type="button"
-          onClick={buscarApartamento}
-          className="mt-3 w-full bg-indigo-500 hover:bg-indigo-600"
-          disabled={isLoading}
-        >
-          Buscar
-        </Button>
-      </div>
-    )}
-  </div>
-</div>
-          {errors.apartmentId && (
-            <p className="text-sm text-red-600">{errors.apartmentId}</p>
-          )}
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label className="mb-2 font-medium text-gray-700">Buscar Apartamento</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Bloco"
+                  value={bloco}
+                  onChange={(e) => setBloco(e.target.value)}
+                  disabled={isLoading || formData.accessLevel === "funcionario"}
+                  className="border border-gray-300 w-full"
+                />
+                <Input
+                  placeholder="Número"
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                  disabled={isLoading || formData.accessLevel === "funcionario"}
+                  className="border border-gray-300 w-full"
+                />
+                <Button
+                  type="button"
+                  onClick={buscarApartamento}
+                  disabled={isLoading || formData.accessLevel === "funcionario"}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
+                >
+                  <FiSearch size={20} />
+                </Button>
+              </div>
+              {errors.apartmentId && <p className="text-sm text-red-600 mt-1">{errors.apartmentId}</p>}
+            </div>
+          </div>
 
-          <Input
-            name="codigoRFID"
-            placeholder="Código RFID"
-            value={formData.codigoRFID}
-            readOnly
-            disabled={isLoading}
-          />
-          {errors.codigoRFID && (
-            <p className="text-sm text-red-600">{errors.codigoRFID}</p>
-          )}
-
-          <Button
-            type="button"
-            onClick={handleReadRFID}
-            className="w-full bg-blue-500 hover:bg-blue-600"
-            disabled={isLoading}
-          >
-            {isLoading ? "Lendo..." : "Ler Tag RFID"}
-          </Button>
-
-          <select
-            name="accessLevel"
-            value={formData.accessLevel}
-            onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
-            className="w-full p-2 border rounded"
-            disabled={isLoading}
-            required
-          >
-            <option value="" disabled>
-              Selecione o nível de acesso
-            </option>
-            <option value="morador">Morador</option>
-            <option value="funcionario">Funcionário</option>
-            <option value="sindico">Síndico</option>
-          </select>
-          {errors.accessLevel && (
-            <p className="text-sm text-red-600">{errors.accessLevel}</p>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full bg-green-500 hover:bg-green-600"
-            disabled={isLoading}
-          >
-            {isLoading ? "Salvando..." : "Salvar"}
-          </Button>
+          {/* Linha 4: Nível de Acesso, Voltar e Salvar */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
+              <select
+                id="accessLevel"
+                name="accessLevel"
+                value={formData.accessLevel}
+                onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
+                disabled={isLoading}
+                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+              >
+                <option value="">Selecione</option>
+                <option value="funcionario">Funcionário</option>
+                <option value="morador">Morador</option>
+                <option value="sindico">Síndico</option>
+              </select>
+              {errors.accessLevel && <p className="text-sm text-red-600 mt-1">{errors.accessLevel}</p>}
+            </div>
+            <div className="flex sm:ml-auto gap-4">
+              <Button
+                type="button"
+                onClick={() => router.push("/usuarios")}
+                disabled={isLoading}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-semibold w-full sm:w-auto"
+              >
+                Voltar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-indigo-700 hover:bg-indigo-800 text-white px-6 py-2 rounded font-semibold w-full sm:w-auto"
+              >
+                {isLoading ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </div>
         </form>
       </div>
     </div>

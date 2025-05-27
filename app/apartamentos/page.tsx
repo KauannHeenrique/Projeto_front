@@ -59,7 +59,7 @@ export default function ApartamentsPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6 flex-wrap">
           <h1 className="text-xl md:text-2xl font-bold">Apartamentos</h1>
-          <span className="text-sm text-gray-600">Total: {filtered.length}</span>
+          <span className="text-sm text-gray-600">Total de apartamentos: {filtered.length}</span>
         </div>
 
         <div className="mb-6">

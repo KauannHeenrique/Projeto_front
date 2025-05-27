@@ -172,97 +172,96 @@ export default function UsuariosPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6 flex-wrap">
-          <h1 className="text-xl md:text-2xl font-bold">Moradores</h1>
-          <span className="text-sm text-gray-600">
-            Total de moradores: {filteredUsers.length}
-          </span>
-        </div>
-
-        {/* Search bar and Voltar button */}
-        <div className="mb-6">
-          <Input
-            placeholder="Buscar morador..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="mb-4 text-sm md:text-base py-2 md:py-3"
-          />
-          <div className="flex justify-between items-center">
-            <Button
-              className="bg-gray-500 hover:bg-gray-600 text-sm py-2 px-3"
-              onClick={() => router.back()}
-            >
-              Voltar
-            </Button>
-            <Button
-              className="bg-green-500 hover:bg-green-600 text-sm py-2 px-3"
-              onClick={() => router.push("/usuarios/adicionar")}
-            >
-              <span className="mr-2">+</span> Novo morador
-            </Button>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
-            {success}
-          </div>
-        )}
-
-        {filteredUsers.length === 0 ? (
-  <div className="bg-white rounded-lg shadow p-4 text-center text-gray-600">
-    {searchTerm ? "Nenhum morador encontrado." : "Nenhum morador cadastrado."}
-  </div>
-) : (
-  <div className="overflow-x-auto bg-white rounded-lg shadow">
-    <table className="min-w-full text-sm text-center text-gray-600">
-      <thead className="text-xs text-gray-700 uppercase bg-gray-100">
-        <tr>
-          <th scope="col" className="px-4 py-3 text-left">Nome</th>
-          <th scope="col" className="px-4 py-3">Bloco</th>
-          <th scope="col" className="px-4 py-3">Apartamento</th>
-          <th scope="col" className="px-4 py-3">Nível de Acesso</th>
-          <th scope="col" className="px-4 py-3 text-center">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredUsers.map((user, index) => (
-          <tr
-            key={`${user.id}-${index}`}
-            className="border-b hover:bg-gray-50 transition cursor-pointer"
-            onClick={() => router.push(`/usuarios/${user.id}`)}
-          >
-            <td className="px-4 py-3 text-left font-bold capitalize">{user.nome}</td>
-            <td className="px-4 py-3">{user.bloco}</td>
-            <td className="px-4 py-3">{user.numero}</td>
-            <td className="px-4 py-3">{user.accessLevel}</td>
-            <td
-              className="px-4 py-3 text-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/usuarios/${user.id}/editar`)}
-                      >
-                        Ver detalhes
-                      </Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
+ return (
+  <div className="min-h-screen bg-gray-50 p-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="flex justify-between items-center mb-6 flex-wrap">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Moradores</h1>
+        <span className="text-sm text-gray-600">
+          Total de moradores: {filteredUsers.length}
+        </span>
       </div>
+      {/* Search bar and buttons */}
+      <div className="mb-6">
+        <Input
+          placeholder="Buscar morador..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-4 text-sm md:text-base py-2 md:py-3"
+        />
+        <div className="flex justify-between items-center">
+          <Button
+            className="bg-gray-500 hover:bg-gray-600 text-sm py-2 px-3"
+            onClick={() => router.back()}
+          >
+            Voltar
+          </Button>
+          <Button
+            className="bg-green-500 hover:bg-green-600 text-sm py-2 px-3"
+            onClick={() => router.push("/usuarios/adicionar")}
+          >
+            <span className="mr-2">+</span> Novo morador
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
+          {success}
+        </div>
+      )}
+
+      {filteredUsers.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-4 text-center text-gray-600">
+          {searchTerm ? "Nenhum morador encontrado." : "Nenhum morador cadastrado."}
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-white rounded-lg shadow">
+          <table className="min-w-full text-sm text-center text-gray-600">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+              <tr>
+                <th scope="col" className="px-4 py-3 text-left">Nome</th>
+                <th scope="col" className="px-4 py-3">Bloco</th>
+                <th scope="col" className="px-4 py-3">Apartamento</th>
+                <th scope="col" className="px-4 py-3">Nível de Acesso</th>
+                <th scope="col" className="px-4 py-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user, index) => (
+                <tr
+                  key={`${user.id}-${index}`}
+                  className="border-b hover:bg-gray-50 transition cursor-pointer"
+                  onClick={() => router.push(`/usuarios/${user.id}`)}
+                >
+                  <td className="px-4 py-3 text-left font-bold capitalize">{user.nome}</td>
+                  <td className="px-4 py-3">{user.bloco}</td>
+                  <td className="px-4 py-3">{user.numero}</td>
+                  <td className="px-4 py-3">{user.accessLevel}</td>
+                  <td
+                    className="px-4 py-3 text-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/usuarios/${user.id}/editar`)}
+                    >
+                      Ver detalhes
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 }

@@ -60,8 +60,10 @@ export function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configurações
+                  <Link href="/settings" className="flex items-center w-full">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurações
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
@@ -103,12 +105,12 @@ export function Header() {
                 Relatórios
               </Link>
               <Link
-                href="#"
-                className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-[#26c9a8]"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
-              </Link>
+                  href="/settings"
+                  className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-[#26c9a8]"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurações
+                </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 hover:text-red-700"

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { IMaskInput } from "react-imask" // Importe o IMaskInput
 import { LockIcon, UserIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -12,9 +13,9 @@ import Cookies from "js-cookie"
 import { validate } from "@/lib/validate_login"
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false) // estado pra mostrar/esconder senha
+  const [documento, setDocumento] = useState("")
+  const [senha, setSenha] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
@@ -38,35 +39,39 @@ export default function LoginPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrorMessage("")
+  e.preventDefault();
+  setIsLoading(true);
+  setErrorMessage("");
 
-    try {
-      const response = await api.post('/Usuario/Login', {
-        cpf: username,
-        senha: password
-      })
+  try {
+    const cpfLimpo = documento.replace(/\D/g, "");
+    const response = await api.post('/Usuario/Login', {
+      cpf: cpfLimpo,
+      senha: senha
+    });
 
-      const token = response.data?.token || response.data?.accessToken
-      if (!token) {
-        throw new Error("Token de autenticação não encontrado.")
-      }
+    const { token, redirectTo, mensagem, usuario } = response.data;
 
-      Cookies.set("auth_token", token, { expires: 1 })
-
-      router.push("/home")
-    } catch (error: any) {
-      if (error.response) {
-        const msg = error.response.data?.message || "Credenciais inválidas."
-        setErrorMessage(msg)
-      } else {
-        setErrorMessage("Erro ao conectar com o servidor.")
-      }
-    } finally {
-      setIsLoading(false)
+    if (redirectTo) {
+      alert(mensagem); // Ex.: "Por favor, altere sua senha padrão."
+      Cookies.set("auth_token", token, { expires: 1 });
+      router.push(redirectTo);
+      return;
     }
+
+    Cookies.set("auth_token", token, { expires: 1 });
+    router.push("/home");
+  } catch (error: any) {
+    if (error.response) {
+      const msg = error.response.data?.mensagem || "Credenciais inválidas.";
+      setErrorMessage(msg);
+    } else {
+      setErrorMessage("Erro ao conectar com o servidor.");
+    }
+  } finally {
+    setIsLoading(false);
   }
+};
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -90,24 +95,24 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
               <UserIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Usuário"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="pl-10 h-12 rounded-full border-gray-200"
-                required
+              <IMaskInput
+                mask="000.000.000-00"
+                value={documento}
+                onAccept={(value: string) => setDocumento(value)} // Use onAccept para capturar o valor mascarado
                 disabled={isLoading}
+                className="pl-10 h-12 rounded-full border-gray-200 w-full border bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#26c9a8]"
+                placeholder="CPF"
+                required
               />
             </div>
 
             <div className="relative">
               <LockIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <Input
-                type={showPassword ? "text" : "password"} // alterna o tipo aqui
+                type={showPassword ? "text" : "password"}
                 placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
                 className="pl-10 h-12 rounded-full border-gray-200"
                 required
                 disabled={isLoading}

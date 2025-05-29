@@ -98,8 +98,8 @@ export default function UsuariosPage() {
               : user.nivelAcesso === 3
               ? "Síndico"
               : "Desconhecido",
-          bloco: user.apartamento?.bloco || "Não informado",
-          numero: String(user.apartamento?.numero ?? "Não informado"),
+          bloco: user.apartamento?.bloco || "-",
+          numero: String(user.apartamento?.numero ?? "-"),
           documento: String(user.Documento ?? user.documento ?? user.CPF ?? user.Cpf ?? user.DocumentoUsuario ?? "Não informado"),
         }));
 

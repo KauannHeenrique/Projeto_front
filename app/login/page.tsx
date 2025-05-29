@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { LockIcon, UserIcon } from "lucide-react"
+import { LockIcon, UserIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import api from "@/services/api"
@@ -14,23 +14,28 @@ import { validate } from "@/lib/validate_login"
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false) // estado pra mostrar/esconder senha
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
-useEffect(() => {
-  const runValidation = async () => {
-    try {
-      const result = await validate();  
-      if (result) {
-        router.push('/home');
-      }
-    } catch (error) {
-      console.error('Erro na validação:', error);
-    }
-  };
 
-  runValidation();
-}, []);
+  useEffect(() => {
+    const runValidation = async () => {
+      try {
+        const result = await validate()
+        if (result) {
+          router.push('/home')
+        }
+      } catch (error) {
+        console.error('Erro na validação:', error)
+      }
+    }
+    runValidation()
+  }, [])
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,7 +104,7 @@ useEffect(() => {
             <div className="relative">
               <LockIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"} // alterna o tipo aqui
                 placeholder="Senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -107,6 +112,15 @@ useEffect(() => {
                 required
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                onClick={toggleShowPassword}
+                className="absolute right-3 top-3 text-gray-400"
+                aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                disabled={isLoading}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
             </div>
 
             {errorMessage && (

@@ -183,7 +183,7 @@ export default function AddUser() {
     setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
 
     try {
-      const response = await fetch("http://192.168.1.87/read-rfid");
+      const response = await fetch("http://172.20.10.4/read-rfid");
       console.log("Resposta da API (RFID):", response.status, response.statusText);
       const data = await response.json();
       console.log("Dados recebidos da API (RFID):", data);
@@ -196,7 +196,7 @@ export default function AddUser() {
         setApiError("Nenhuma tag detectada.");
       }
     } catch (err) {
-      setApiError("Erro ao comunicar com o ESP32.");
+      setApiError("Erro ao comunicar com o leitor RFID.");
       console.error("Erro ao ler RFID:", err);
       setFormData({ ...formData, codigoRFID: "" });
     } finally {

@@ -5,7 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiSave } from "react-icons/fi";
+import { BsChevronDoubleLeft } from "react-icons/bs";
 
 interface FormData {
   name: string;
@@ -265,120 +266,116 @@ export default function AddUser() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Adicionar Morador</h1>
+ 
+return (
+  <div className="min-h-screen bg-gray-50">
+    {/* Barra fixa de botões */}
+    <div className="sticky top-0 z-20 bg-white border-b px-4 sm:px-6 md:px-8 py-2 flex justify-between items-center shadow-sm">
+      {/* Botão Voltar */}
+      <Button
+        type="button"
+        onClick={() => router.push("/usuarios")}
+        disabled={isLoading}
+        variant="ghost"
+        className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+      >
+        <BsChevronDoubleLeft size={16} />
+        Voltar
+      </Button>
 
-        {apiError && (
-          <div
-            className={`mb-4 p-4 rounded ${
-              apiError.includes("sucesso")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {apiError}
+      {/* Botão Salvar */}
+      <Button
+        type="submit"
+        form="addUserForm"
+        disabled={isLoading}
+        className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+      >
+        <FiSave size={16} />
+        {isLoading ? "Salvando..." : "Salvar"}
+      </Button>
+    </div>
+
+    {/* Conteúdo da página */}
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Adicionar usuário</h1>
+
+      {apiError && (
+        <div className={`mb-4 p-4 rounded ${apiError.includes("sucesso") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+          {apiError}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} id="addUserForm" className="space-y-6">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Nome completo"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isLoading}
+            />
           </div>
-        )}
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="usuario@condominio.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Linha 1: Nome e Email */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Nome completo"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-                className="border border-gray-300 focus:border-indigo-500"
-              />
-              {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
+            <Input
+              id="phone"
+              name="phone"
+              placeholder="(99) 99999-9999"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+              disabled={isLoading}
+            />
+          </div>
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
+            <Input
+              id="document"
+              name="document"
+              placeholder="000.000.000-00"
+              value={formData.document}
+              onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
 
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="morador@condominio.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={isLoading}
-                className="border border-gray-300 focus:border-indigo-500"
-              />
-              {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
+            <select
+              id="accessLevel"
+              name="accessLevel"
+              value={formData.accessLevel}
+              onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
+              disabled={isLoading}
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="">Selecione</option>
+              <option value="funcionario">Funcionário</option>
+              <option value="morador">Morador</option>
+              <option value="sindico">Síndico</option>
+            </select>
           </div>
 
-          {/* Linha 2: Telefone e Documento */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
-              <Input
-                id="phone"
-                name="phone"
-                placeholder="(99) 99999-9999"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-                disabled={isLoading}
-                className="border border-gray-300 focus:border-indigo-500"
-              />
-              {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
-            </div>
-
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
-              <Input
-                id="document"
-                name="document"
-                placeholder="000.000.000-00"
-                value={formData.document}
-                onChange={(e) => {
-                  let value = e.target.value;
-                  const digits = value.replace(/\D/g, "");
-                  if (digits.length <= 11 && /^\d*$/.test(digits)) {
-                    value = formatCPF(value);
-                  }
-                  setFormData({ ...formData, document: value });
-                }}
-                disabled={isLoading}
-                className="border border-gray-300 focus:border-indigo-500"
-              />
-              {errors.document && <p className="text-sm text-red-600 mt-1">{errors.document}</p>}
-            </div>
-          </div>
-
-          {/* Linha 3: Código RFID e Buscar Apartamento */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
-              <div className="flex gap-2">
-                <Input
-                  id="codigoRFID"
-                  name="codigoRFID"
-                  placeholder="Ex: ABCD1234"
-                  value={formData.codigoRFID}
-                  onChange={(e) => setFormData({ ...formData, codigoRFID: e.target.value.toUpperCase() })}
-                  disabled={isLoading}
-                  className="border border-gray-300 focus:border-indigo-500 flex-grow"
-                />
-                <Button
-                  type="button"
-                  onClick={handleReadRFID}
-                  disabled={isLoading}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-                >
-                  {isLoading ? "Lendo..." : "Ler RFID"}
-                </Button>
-              </div>
-              {errors.codigoRFID && <p className="text-sm text-red-600 mt-1">{errors.codigoRFID}</p>}
-            </div>
-
+          {formData.accessLevel && formData.accessLevel !== "funcionario" && (
             <div className="flex flex-col w-full sm:w-1/2">
               <label className="mb-2 font-medium text-gray-700">Buscar Apartamento</label>
               <div className="flex gap-2">
@@ -386,68 +383,54 @@ export default function AddUser() {
                   placeholder="Bloco"
                   value={bloco}
                   onChange={(e) => setBloco(e.target.value)}
-                  disabled={isLoading || formData.accessLevel === "funcionario"}
+                  disabled={isLoading}
                   className="border border-gray-300 w-full"
                 />
                 <Input
                   placeholder="Número"
                   value={numero}
                   onChange={(e) => setNumero(e.target.value)}
-                  disabled={isLoading || formData.accessLevel === "funcionario"}
+                  disabled={isLoading}
                   className="border border-gray-300 w-full"
                 />
                 <Button
                   type="button"
                   onClick={buscarApartamento}
-                  disabled={isLoading || formData.accessLevel === "funcionario"}
+                  disabled={isLoading}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
                 >
                   <FiSearch size={20} />
                 </Button>
               </div>
-              {errors.apartmentId && <p className="text-sm text-red-600 mt-1">{errors.apartmentId}</p>}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Linha 4: Nível de Acesso, Voltar e Salvar */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
-              <select
-                id="accessLevel"
-                name="accessLevel"
-                value={formData.accessLevel}
-                onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
-                disabled={isLoading}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
-              >
-                <option value="">Selecione</option>
-                <option value="funcionario">Funcionário</option>
-                <option value="morador">Morador</option>
-                <option value="sindico">Síndico</option>
-              </select>
-              {errors.accessLevel && <p className="text-sm text-red-600 mt-1">{errors.accessLevel}</p>}
-            </div>
-            <div className="flex sm:ml-auto gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
+            <div className="flex gap-2">
+              <Input
+                id="codigoRFID"
+                name="codigoRFID"
+                placeholder="Ex: ABCD1234"
+                value={formData.codigoRFID}
+                readOnly
+                className="border border-gray-300 focus:border-indigo-500 flex-grow"
+              />
               <Button
                 type="button"
-                onClick={() => router.push("/usuarios")}
+                onClick={handleReadRFID}
                 disabled={isLoading}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-semibold w-full sm:w-auto"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
               >
-                Voltar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-indigo-700 hover:bg-indigo-800 text-white px-6 py-2 rounded font-semibold w-full sm:w-auto"
-              >
-                {isLoading ? "Salvando..." : "Salvar"}
+                {isLoading ? "Lendo..." : "Ler RFID"}
               </Button>
             </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
-  );
+  </div>
+);
 }

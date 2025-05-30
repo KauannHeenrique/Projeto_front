@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { FiSearch, FiSave } from "react-icons/fi";
+import { BsChevronDoubleLeft } from "react-icons/bs";
+
+
 
 // Hook to get window size
 function useWindowSize() {
@@ -42,19 +46,16 @@ export default function UsuariosPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { width } = useWindowSize();
-  const isMobile = width < 768; // Mobile breakpoint (md in Tailwind)
+  const isMobile = width < 768;
 
-  // URL da API
   const API_URL = "http://172.20.10.2:5263";
 
-  // Carregar usuários da API
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoading(true);
       setError(null);
       setSuccess(null);
       try {
-        console.log("Tentando conectar à API:", `${API_URL}/api/Usuario/ExibirTodosUsuarios`);
         const response = await fetch(`${API_URL}/api/Usuario/ExibirTodosUsuarios`, {
           method: "GET",
           headers: {
@@ -64,49 +65,36 @@ export default function UsuariosPage() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Erro ${response.status}: ${errorData.mensagem || "Falha ao buscar moradores"}`);
+          throw new Error(`Erro ${response.status}: ${errorData.mensagem || "Falha ao buscar usuários"}`);
         }
 
-        const data = await response.json();
-        console.log("Dados brutos da API:", data);
-
-        // Verificar IDs duplicados ou inválidos
-        const idCounts = new Map<number, number>();
-        data.forEach((user: any) => {
-          const id = user.UsuarioId || 0;
-          idCounts.set(id, (idCounts.get(id) || 0) + 1);
-          if (id === 0 || idCounts.get(id)! > 1) {
-            console.warn(`ID inválido ou duplicado encontrado: UsuarioId=${id}, Nome=${user.nome}`);
-          }
-          // Logar valores de numero e documento para depuração
-          console.log(
-            `Usuario: ${user.nome}, Numero: ${user.apartamento?.numero}, Tipo: ${typeof user.apartamento?.numero}, ` +
-            `Documento: ${user.Documento}, documento: ${user.documento}, CPF: ${user.CPF}, Cpf: ${user.Cpf}, DocumentoUsuario: ${user.DocumentoUsuario}`
-          );
-        });
+const data = await response.json();
+console.log("Usuários recebidos:", data);
 
         const mappedUsers: User[] = data.map((user: any) => ({
-          id: user.UsuarioId || 0,
-          nome: user.nome || "Nome não informado",
-          email: user.email || "Email não informado",
-          phone: user.telefone || "Telefone não informado",
-          accessLevel:
-            user.nivelAcesso === 1
-              ? "Funcionário"
-              : user.nivelAcesso === 2
-              ? "Morador"
-              : user.nivelAcesso === 3
-              ? "Síndico"
-              : "Desconhecido",
-          bloco: user.apartamento?.bloco || "-",
-          numero: String(user.apartamento?.numero ?? "-"),
-          documento: String(user.Documento ?? user.documento ?? user.CPF ?? user.Cpf ?? user.DocumentoUsuario ?? "Não informado"),
-        }));
+  id: user.usuarioId,
+  nome: user.nome || "Nome não informado",
+  email: user.email || "Email não informado",
+  phone: user.telefone || "Telefone não informado",
+  accessLevel:
+    user.nivelAcesso === 1
+      ? "Funcionário"
+      : user.nivelAcesso === 2
+      ? "Morador"
+      : user.nivelAcesso === 3
+      ? "Síndico"
+      : "Desconhecido",
+  bloco: user.apartamento?.bloco || "-",
+  numero: String(user.apartamento?.numero ?? "-"),
+  documento: String(user.documento ?? "Não informado"),
+}));
+
+
 
         setUsers(mappedUsers);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Erro ao conectar com a API";
-        console.error("Erro ao buscar moradores:", errorMessage);
+        console.error("Erro ao buscar usuários:", errorMessage);
         setError(errorMessage);
         setTimeout(() => setError(null), 5000);
       } finally {
@@ -117,7 +105,6 @@ export default function UsuariosPage() {
     fetchUsers();
   }, []);
 
-  // Filtrar usuários por nome, email, bloco, número ou documento
   const filteredUsers = users.filter((user) => {
     const nome = String(user.nome ?? "").toLowerCase();
     const email = String(user.email ?? "").toLowerCase();
@@ -134,7 +121,6 @@ export default function UsuariosPage() {
     );
   });
 
-  // Remover usuário
   const handleRemoveUser = async (userId: number) => {
     if (confirm("Tem certeza que deseja remover este morador?")) {
       try {
@@ -172,48 +158,54 @@ export default function UsuariosPage() {
     );
   }
 
- return (
-  <div className="min-h-screen bg-gray-50 p-8">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div className="flex justify-between items-center mb-6 flex-wrap">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Moradores</h1>
+  return (
+  <div className="min-h-screen bg-gray-50">
+    {/* Barra fixa full-width */}
+    <div className="sticky top-0 z-20 bg-white border-b shadow-sm w-full">
+      <div className="px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+        <Button
+          type="button"
+          onClick={() => router.push("/home")}
+          variant="ghost"
+          className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+        >
+          <BsChevronDoubleLeft size={16} />
+          Voltar
+        </Button>
+
+        <Button
+          type="button"
+          onClick={() => router.push("/usuarios/adicionar")}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm rounded font-semibold"
+        >
+          <span className="mr-1 text-lg">+</span> Novo usuário
+        </Button>
+      </div>
+    </div>
+
+    {/* Conteúdo principal centralizado */}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex justify-between items-center mb-4 flex-wrap">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Usuários</h1>
         <span className="text-sm text-gray-600">
-          Total de moradores: {filteredUsers.length}
+          Total de usuários: {filteredUsers.length}
         </span>
       </div>
-      {/* Search bar and buttons */}
+
       <div className="mb-6">
         <Input
-          placeholder="Buscar morador..."
+          placeholder="Buscar usuário..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="mb-4 text-sm md:text-base py-2 md:py-3"
         />
-        <div className="flex justify-between items-center">
-          <Button
-            className="bg-gray-500 hover:bg-gray-600 text-sm py-2 px-3"
-            onClick={() => router.back()}
-          >
-            Voltar
-          </Button>
-          <Button
-            className="bg-green-500 hover:bg-green-600 text-sm py-2 px-3"
-            onClick={() => router.push("/usuarios/adicionar")}
-          >
-            <span className="mr-2">+</span> Novo morador
-          </Button>
-        </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-          {error}
-        </div>
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">{error}</div>
       )}
       {success && (
-        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
-          {success}
-        </div>
+        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">{success}</div>
       )}
 
       {filteredUsers.length === 0 ? (
@@ -225,11 +217,11 @@ export default function UsuariosPage() {
           <table className="min-w-full text-sm text-center text-gray-600">
             <thead className="text-xs text-gray-700 uppercase bg-gray-100">
               <tr>
-                <th scope="col" className="px-4 py-3 text-left">Nome</th>
-                <th scope="col" className="px-4 py-3">Bloco</th>
-                <th scope="col" className="px-4 py-3">Apartamento</th>
-                <th scope="col" className="px-4 py-3">Nível de Acesso</th>
-                <th scope="col" className="px-4 py-3 text-center">Ações</th>
+                <th className="px-4 py-3 text-left">Nome</th>
+                <th className="px-4 py-3">Bloco</th>
+                <th className="px-4 py-3">Apartamento</th>
+                <th className="px-4 py-3">Nível de Acesso</th>
+                <th className="px-4 py-3 text-center">Ações</th>
               </tr>
             </thead>
             <tbody>

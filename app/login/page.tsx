@@ -138,7 +138,7 @@ export default function LoginPage() {
             )}
 
             <div className="flex items-center justify-end">
-              <Link href="/recuperar-senha" className="text-sm text-[#26c9a8] hover:underline">
+              <Link href="/changePassword" className="text-sm text-[#26c9a8] hover:underline">
                 Esqueci minha senha
               </Link>
             </div>

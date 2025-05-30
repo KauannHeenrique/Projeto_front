@@ -210,7 +210,7 @@ export default function EditUser({ params }: { params: { id: string } }) {
     setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
 
     try {
-      const response = await fetch("http://192.168.1.87/read-rfid");
+      const response = await fetch("http://172.20.10.4/read-rfid");
       const data = await response.json();
 
       if (data.uid) {

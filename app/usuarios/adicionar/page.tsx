@@ -47,7 +47,7 @@ export default function AddUser() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const API_URL = "http://192.168.1.9:5263";
+  const API_URL = "http://172.20.10.2:5263";
 
   // Fechar popover ao clicar fora
   useEffect(() => {
@@ -183,7 +183,7 @@ export default function AddUser() {
     setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
 
     try {
-      const response = await fetch("http://192.168.1.87/read-rfid");
+      const response = await fetch("http://172.20.10.4/read-rfid");
       console.log("Resposta da API (RFID):", response.status, response.statusText);
       const data = await response.json();
       console.log("Dados recebidos da API (RFID):", data);

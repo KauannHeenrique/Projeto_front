@@ -45,7 +45,7 @@ export default function UsuariosPage() {
   const isMobile = width < 768; // Mobile breakpoint (md in Tailwind)
 
   // URL da API
-  const API_URL = "http://192.168.1.9:5263";
+  const API_URL = "http://172.20.10.2:5263";
 
   // Carregar usuários da API
   useEffect(() => {

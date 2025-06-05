@@ -1,5 +1,3 @@
-// Arquivo atualizado com botão de alterar senha redirecionando para /changePassword
-
 "use client"
 
 import { useEffect, useState } from "react"

@@ -221,9 +221,9 @@ export default function AddUser() {
 
     try {
       const nivelAcessoMap: { [key: string]: number } = {
-        sindico: 2,
-        funcionario: 3,
-        morador: 4,
+        funcionario: 1,
+        sindico: 3,
+        morador: 2,
       };
 
       const usuario = {

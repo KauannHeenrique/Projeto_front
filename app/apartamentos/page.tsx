@@ -10,7 +10,7 @@ interface Apartamento {
   id: number;
   bloco: string;
   numero: string;
-  situacao: number; // Alterado para ser um número
+  situacao: number;
 }
 
 export default function ApartamentsPage() {
@@ -21,7 +21,7 @@ export default function ApartamentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const API_URL = "http://localhost:5263";
+  const API_URL = "http://172.20.10.2:5263";
 
   useEffect(() => {
     const fetchApartamentos = async () => {
@@ -34,7 +34,7 @@ export default function ApartamentsPage() {
         const mapped: Apartamento[] = data.map((a: any) => ({
           id: a.apartamentoId ?? a.id ?? a.idApartamento ?? 0, // tenta várias opções
           bloco: a.bloco || "Desconhecido",
-          numero: a.numero || "Desconhecido",
+          numero: String(a.numero || "Desconhecido"),
           situacao: a.situacao, // Aqui, a situação deve ser numérica
         }));
         setApartamentos(mapped);
@@ -50,14 +50,15 @@ export default function ApartamentsPage() {
   }, []);
 
   const filtered = apartamentos.filter((a) => {
-    const termo = searchTerm.toLowerCase();
-    return (
-      a.bloco.toLowerCase().includes(termo) ||
-      a.numero.toLowerCase().includes(termo)
-    );
-  });
+  const termo = searchTerm.trim().toLowerCase();
 
-  // Função para exibir a situação de forma legível
+  return (
+    String(a.bloco).toLowerCase().includes(termo) ||
+    String(a.numero).toLowerCase() === termo
+  );
+});
+
+
   const getSituacaoLabel = (situacao: number) => {
     switch (situacao) {
       case 1:
@@ -73,7 +74,6 @@ export default function ApartamentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Barra de botões fixa no topo */}
       <div className="sticky top-0 z-20 bg-white border-b px-4 sm:px-6 md:px-8 py-2 flex justify-between items-center shadow-sm">
         <Button
           type="button"
@@ -131,7 +131,7 @@ export default function ApartamentsPage() {
                 <tr>
                   <th scope="col" className="px-4 py-3">Bloco</th>
                   <th scope="col" className="px-4 py-3">Apartamento</th>
-                  <th scope="col" className="px-4 py-3">Situação</th> {/* Adicionando coluna Situação */}
+                  <th scope="col" className="px-4 py-3">Situação</th> 
                   <th scope="col" className="px-4 py-3 text-center">Ações</th>
                 </tr>
               </thead>
@@ -143,7 +143,7 @@ export default function ApartamentsPage() {
                   >
                     <td className="px-4 py-3">{apt.bloco}</td>
                     <td className="px-4 py-3">{apt.numero}</td>
-                    <td className="px-4 py-3">{getSituacaoLabel(apt.situacao)}</td> {/* Exibindo a situação */}
+                    <td className="px-4 py-3">{getSituacaoLabel(apt.situacao)}</td>
                     <td
                       className="px-4 py-3"
                       onClick={(e) => e.stopPropagation()}

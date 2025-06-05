@@ -1,260 +1,130 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { FiSearch, FiSave, FiRefreshCw } from "react-icons/fi";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { BsChevronDoubleLeft } from "react-icons/bs";
+import { FiSave, FiTrash2 } from "react-icons/fi";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
-interface FormData {
-  name: string;
-  email: string;
-  phone: string;
-  document: string;
-  accessLevel: string;
-  apartmentId: string;
-  codigoRFID: string;
-}
-
-interface FormErrors {
-  name?: string;
-  email?: string;
-  phone?: string;
-  document?: string;
-  apartmentId?: string;
-  accessLevel?: string;
-  codigoRFID?: string;
-}
-
-export default function EditUser() {
+export default function EditApartmentPage() {
   const router = useRouter();
   const { id } = useParams();
-  
   const API_URL = "http://172.20.10.2:5263";
 
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    email: "",
-    phone: "",
-    document: "",
-    accessLevel: "",
-    apartmentId: "",
-    codigoRFID: "",
-  });
   const [bloco, setBloco] = useState("");
   const [numero, setNumero] = useState("");
+  const [proprietario, setProprietario] = useState("");
+  const [situacao, setSituacao] = useState("1");
+  const [observacoes, setObservacoes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
-
-  const handleResetPassword = async () => {
-  if (!id) return;
-  try {
-    const response = await fetch(`${API_URL}/api/Usuario/ResetarSenha/${id}`, {
-      method: "PUT",
-    });
-    if (response.ok) {
-      setApiError("Senha redefinida com sucesso!");
-    } else {
-      setApiError("Falha ao redefinir a senha do usuário.");
-    }
-  } catch (error) {
-    console.error("Erro ao redefinir senha:", error);
-    setApiError("Erro ao tentar redefinir a senha.");
-  }
-};
-
-  
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
-  const fetchUser = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/api/Usuario/BuscarUsuarioPor?id=${id}`);
-      const data = await response.json();
-      const usuario = Array.isArray(data) ? data[0] : data;
+    const fetchApartamento = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/api/Apartamento/BuscarApartamentoPorId/${id}`);
+        const data = await response.json();
 
-      if (!usuario) {
-        setApiError("Usuário não encontrado.");
-        return;
+        if (response.ok) {
+          setBloco(data.bloco || "");
+          setNumero(data.numero || "");
+          setProprietario(data.proprietario || "");
+          setSituacao(data.situacao?.toString() || "1");
+          setObservacoes(data.observacoes || "");
+        } else {
+          setApiError(data.mensagem || "Erro ao carregar apartamento.");
+        }
+      } catch (err) {
+        setApiError("Erro ao conectar com a API.");
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setFormData({
-        name: usuario.nome || "",
-        email: usuario.email || "",
-        phone: formatPhone(usuario.telefone || ""),
-        document: formatCPF(usuario.documento || ""),
-        accessLevel: usuario.nivelAcesso === 1 ? "funcionario" : usuario.nivelAcesso === 3 ? "sindico" : "morador",
-        apartmentId: usuario.apartamentoId?.toString() || "",
-        codigoRFID: usuario.codigoRFID || "",
+    if (id) fetchApartamento();
+  }, [id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setApiError(null);
+
+    const body = {
+      id: Number(id),
+      bloco,
+      numero,
+      proprietario,
+      situacao: Number(situacao),
+      observacoes
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/api/Apartamento/AtualizarApartamento/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
       });
 
-      // Conversão explícita para string para evitar erro .trim()
-      setBloco(usuario.apartamento?.bloco ? String(usuario.apartamento.bloco) : "");
-      setNumero(usuario.apartamento?.numero ? String(usuario.apartamento.numero) : "");
+      const data = await response.json().catch(() => null);
 
-    } catch (err) {
-      setApiError("Erro ao carregar dados do usuário.");
+      if (response.ok) {
+        alert("Apartamento atualizado com sucesso!");
+        router.push("/apartamentos");
+      } else {
+        setApiError(data?.mensagem || "Erro ao atualizar apartamento.");
+      }
+    } catch (err: any) {
+      setApiError("Erro ao conectar com a API: " + (err.message || "verifique a URL ou o servidor."));
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (id) fetchUser();
-}, [id]);
-
-  useEffect(() => {
-    if (formData.accessLevel === "funcionario") {
-      setFormData((prev) => ({ ...prev, apartmentId: "" }));
-      setBloco("");
-      setNumero("");
-      setErrors((prev) => ({ ...prev, apartmentId: undefined }));
-    }
-  }, [formData.accessLevel]);
-
-  const formatPhone = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-  };
-
-  const formatCPF = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-  };
-
-  const handleReadRFID = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setApiError(null);
-    setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
-
+  const handleExcluir = async () => {
     try {
-      const response = await fetch("http://172.20.10.4/read-rfid");
-      const data = await response.json();
+      setIsLoading(true);
+      const res = await fetch(`${API_URL}/api/Apartamento/ExcluirApartamento/${id}`, {
+        method: "DELETE",
+      });
 
-      if (data.uid) {
-        setFormData({ ...formData, codigoRFID: data.uid });
-        setApiError("Tag lida com sucesso!");
+      if (res.ok) {
+        alert("Apartamento excluído com sucesso!");
+        router.push("/apartamentos");
       } else {
-        setFormData({ ...formData, codigoRFID: "" });
-        setApiError("Nenhuma tag detectada.");
+        const data = await res.json();
+        setApiError(data?.mensagem || "Erro ao excluir apartamento.");
       }
-    } catch (err) {
-      setApiError("Erro ao comunicar com o leitor RFID.");
-      setFormData({ ...formData, codigoRFID: "" });
+    } catch {
+      setApiError("Erro ao conectar com a API.");
     } finally {
-      setTimeout(() => setIsLoading(false), 500);
+      setIsLoading(false);
     }
   };
-
-  const buscarApartamento = async () => {
-  if (!String(bloco).trim() || !String(numero).trim()) {
-    setApiError("Informe o bloco e número do apartamento.");
-    return;
-  }
-
-  try {
-    const queryParams = new URLSearchParams();
-    queryParams.append("bloco", String(bloco));
-    queryParams.append("numero", String(numero));
-
-    const url = `${API_URL}/api/Apartamento/BuscarApartamentoPor?${queryParams.toString()}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (response.ok && Array.isArray(data) && data.length > 0) {
-      setFormData({ ...formData, apartmentId: data[0].id.toString() });
-      setApiError("Apartamento encontrado com sucesso!");
-    } else {
-      setFormData({ ...formData, apartmentId: "" });
-      setApiError("Apartamento não encontrado.");
-    }
-  } catch (err) {
-    setApiError("Erro ao buscar apartamento.");
-  }
-};
-
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setErrors({});
-  setApiError(null);
-
-  // Se não for funcionário, forçar busca do apartamento antes de enviar
-  if (formData.accessLevel !== "funcionario") {
-    const buscaAntes = formData.apartmentId === "";
-    if (buscaAntes) {
-      await buscarApartamento();
-      // Se ainda não tiver apartmentId depois da busca, cancela o envio
-      if (!formData.apartmentId || formData.apartmentId === "") {
-        setIsLoading(false);
-        setApiError("Não foi possível localizar o apartamento. Verifique os campos e tente novamente.");
-        return;
-      }
-    }
-  }
-
-  const nivelAcessoMap: { [key: string]: number } = {
-    funcionario: 1,
-    sindico: 3,
-    morador: 2,
-  };
-
-  const usuario = {
-  usuarioId: Number(id),
-  nome: formData.name,
-  documento: formData.document.replace(/[\.\-]/g, ""),
-  email: formData.email,
-  senha: "", // opcional, ou a senha original se mantida
-  nivelAcesso: nivelAcessoMap[formData.accessLevel],
-  telefone: formData.phone.replace(/\D/g, ""),
-  apartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(formData.apartmentId) || null,
-  apartamento: null,
-  codigoRFID: formData.codigoRFID || null,
-  status: true,
-  isTemporaryPassword: false,
-  dataCadastro: new Date().toISOString()
-};
-
-  try {
-    const response = await fetch(`${API_URL}/api/Usuario/AtualizarUsuario/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(usuario),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setApiError("Usuário atualizado com sucesso!");
-      setTimeout(() => router.push("/usuarios"), 2000);
-    } else {
-      setApiError(data.mensagem || `Falha ao atualizar usuário: ${response.statusText}`);
-    }
-  } catch (err) {
-    console.error("Erro ao conectar com a API:", err);
-    setApiError("Erro ao conectar com a API. Verifique sua conexão ou tente novamente.");
-  } finally {
-    setIsLoading(false);
-  }
-};
 
   return (
   <div className="min-h-screen bg-gray-50">
-    {/* Barra de botões fixa no topo */}
+    {/* Barra fixa */}
     <div className="sticky top-0 z-20 bg-white border-b px-4 sm:px-6 md:px-8 py-2 flex justify-between items-center shadow-sm">
-      {/* Botão Voltar - à esquerda */}
+      {/* Botão Voltar */}
       <Button
         type="button"
-        onClick={() => router.push("/usuarios")}
+        onClick={() => router.push("/apartamentos")}
         disabled={isLoading}
         variant="ghost"
         className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
@@ -264,192 +134,126 @@ export default function EditUser() {
       </Button>
 
       {/* Botões à direita */}
-      <div className="flex gap-10">
-        
+      <div className="flex gap-4">
         <Button
           type="button"
-          onClick={handleResetPassword}
+          onClick={async () => {
+            if (confirm("Tem certeza que deseja excluir este apartamento?")) {
+              try {
+                const res = await fetch(`${API_URL}/api/Apartamento/ExcluirApartamento/${id}`, {
+                  method: "DELETE",
+                });
+                if (res.ok) {
+                  setApiError("Apartamento excluído com sucesso.");
+                  setTimeout(() => router.push("/apartamentos"), 900);
+                } else {
+                  setApiError("Falha ao excluir o apartamento.");
+                }
+              } catch (err) {
+                console.error("Erro ao excluir apartamento:", err);
+                setApiError("Erro ao tentar excluir o apartamento.");
+              }
+            }
+          }}
           disabled={isLoading}
           variant="ghost"
-        className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+          className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1"
         >
-          <FiRefreshCw size={16} />
-          Redefinir Senha
+          <FiTrash2 size={16} />
+          Remover apartamento
         </Button>
-         <Button
-      type="button"
-      onClick={async () => {
-        if (confirm("Tem certeza que deseja excluir este usuário?")) {
-          try {
-            const res = await fetch(`${API_URL}/api/Usuario/ExcluirUsuario/${id}`, {
-              method: "DELETE",
-            });
-            if (res.ok) {
-              setApiError("Usuário excluído com sucesso.");
-              setTimeout(() => router.push("/usuarios"), 1500);
-            } else {
-              setApiError("Falha ao excluir o usuário.");
-            }
-          } catch (err) {
-            console.error("Erro ao excluir usuário:", err);
-            setApiError("Erro ao tentar excluir o usuário.");
-          }
-        }
-      }}
-      disabled={isLoading}
-      variant="ghost"
-      className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium"
-    >
-      Remover usuário
-    </Button>
+
         <Button
           type="submit"
-          form="editUserForm"
+          form="editApartmentForm"
           disabled={isLoading}
-          variant="ghost"
           className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
         >
           <FiSave size={16} />
           {isLoading ? "Salvando..." : "Salvar"}
         </Button>
-       
-
       </div>
     </div>
 
-    {/* Conteúdo da página */}
+    {/* Conteúdo */}
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Editar usuário</h1>
+      <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Editar apartamento</h1>
 
       {apiError && (
-        <div className={`mb-4 p-4 rounded ${apiError.includes("sucesso") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+        <div
+          className={`mb-4 p-4 rounded ${
+            apiError.includes("sucesso") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
+        >
           {apiError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} id="editUserForm" className="space-y-6">
+      <form onSubmit={handleSubmit} id="editApartmentForm" className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
           <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
+            <label htmlFor="bloco" className="mb-2 font-medium text-gray-700">Bloco</label>
             <Input
-              id="name"
-              name="name"
+              id="bloco"
+              name="bloco"
+              placeholder="Ex: A"
+              value={bloco}
+              onChange={(e) => setBloco(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="numero" className="mb-2 font-medium text-gray-700">Número</label>
+            <Input
+              id="numero"
+              name="numero"
+              placeholder="Ex: 101"
+              value={numero}
+              onChange={(e) => setNumero(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          <div className="flex flex-col w-full sm:w-1/2">
+            <label htmlFor="proprietario" className="mb-2 font-medium text-gray-700">Proprietário</label>
+            <Input
+              id="proprietario"
+              name="proprietario"
               placeholder="Nome completo"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={proprietario}
+              onChange={(e) => setProprietario(e.target.value)}
               disabled={isLoading}
             />
           </div>
           <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="usuario@condominio.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
-            <Input
-              id="phone"
-              name="phone"
-              placeholder="(99) 99999-9999"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
-            <Input
-              id="document"
-              name="document"
-              placeholder="000.000.000-00"
-              value={formData.document}
-              onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
+            <label htmlFor="situacao" className="mb-2 font-medium text-gray-700">Situação</label>
             <select
-              id="accessLevel"
-              name="accessLevel"
-              value={formData.accessLevel}
-              onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
+              id="situacao"
+              value={situacao}
+              onChange={(e) => setSituacao(e.target.value)}
               disabled={isLoading}
               className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
             >
-              <option value="">Selecione</option>
-              <option value="funcionario">Funcionário</option>
-              <option value="morador">Morador</option>
-              <option value="sindico">Síndico</option>
+              <option value="1">Disponível</option>
+              <option value="2">Ocupado</option>
+              <option value="3">Em manutenção</option>
             </select>
           </div>
-
-          {formData.accessLevel && formData.accessLevel !== "funcionario" && (
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label className="mb-2 font-medium text-gray-700">Buscar Apartamento</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Bloco"
-                  value={bloco}
-                  onChange={(e) => setBloco(e.target.value)}
-                  disabled={isLoading}
-                  className="border border-gray-300 w-full"
-                />
-                <Input
-                  placeholder="Número"
-                  value={numero}
-                  onChange={(e) => setNumero(e.target.value)}
-                  disabled={isLoading}
-                  className="border border-gray-300 w-full"
-                />
-                <Button
-                  type="button"
-                  onClick={buscarApartamento}
-                  disabled={isLoading}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-                >
-                  <FiSearch size={20} />
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-end">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
-            <div className="flex gap-2">
-              <Input
-                id="codigoRFID"
-                name="codigoRFID"
-                placeholder="Ex: ABCD1234"
-                value={formData.codigoRFID}
-                readOnly
-                className="border border-gray-300 focus:border-indigo-500 flex-grow"
-              />
-              <Button
-                type="button"
-                onClick={handleReadRFID}
-                disabled={isLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-              >
-                {isLoading ? "Lendo..." : "Ler RFID"}
-              </Button>
-            </div>
-          </div>
+        <div className="flex flex-col">
+          <label htmlFor="observacoes" className="mb-2 font-medium text-gray-700">Observações (opcional)</label>
+          <textarea
+            id="observacoes"
+            rows={3}
+            value={observacoes}
+            onChange={(e) => setObservacoes(e.target.value)}
+            placeholder="Anotações internas sobre o apartamento..."
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500 resize-none"
+            disabled={isLoading}
+          />
         </div>
       </form>
     </div>

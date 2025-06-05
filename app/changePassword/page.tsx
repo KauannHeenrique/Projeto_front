@@ -45,7 +45,7 @@ export default function ChangePasswordPage() {
 
       if (response.ok) {
         setSuccess("Senha alterada com sucesso!");
-        setTimeout(() => router.push("/settings"), 2000);
+        setTimeout(() => router.push("/home"), 900);
       } else {
         const data = await response.json();
         setError(data.mensagem || "Erro ao alterar a senha.");

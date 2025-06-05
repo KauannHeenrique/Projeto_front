@@ -37,26 +37,23 @@ export default function Home() {
 useEffect(() => {
   async function fetchData() {
     try {
+      const hoje = new Date().toISOString().split("T")[0];
+
       const [usuariosResponse, apartamentosResponse, entradaResponse] = await Promise.all([
         api.get("/Usuario/ExibirTodosUsuarios"),
         api.get("/Apartamento/ExibirTodosApartamentos"),
-        api.get('/AcessoEntradaMorador/ListarEntradas')
+        api.get(`/AcessoEntradaMorador/FiltrarEntradasAdmin?dataFim=${hoje}`)
       ]);
 
-      const usuarios = usuariosResponse.data;
-      const apartamentos = apartamentosResponse.data;
-      const entradas = entradaResponse.data;
-
-      setTotalUsuarios(usuarios.length);
-      setTotalApartamentos(apartamentos.length);
-      setTotalEntradas(entradas.length);
-      
+      setTotalUsuarios(usuariosResponse.data.length);
+      setTotalApartamentos(apartamentosResponse.data.length);
+      setTotalEntradas(entradaResponse.data.length);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
     }
   }
 
-  fetchData();
+  fetchData(); 
 }, []);
 
   return (
@@ -159,7 +156,7 @@ useEffect(() => {
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow">
-            <Link href="/alertas" passHref>
+            <Link href="/accessLog" passHref>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-red-100 p-3">

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter, useParams } from "next/navigation";
-import { FiSearch, FiSave, FiRefreshCw } from "react-icons/fi";
+import { FiSearch, FiSave, FiRefreshCw, FiTrash2 } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 
 interface FormData {
@@ -15,6 +15,7 @@ interface FormData {
   accessLevel: string;
   apartmentId: string;
   codigoRFID: string;
+  status: string;
 }
 
 interface FormErrors {
@@ -41,6 +42,7 @@ export default function EditUser() {
     accessLevel: "",
     apartmentId: "",
     codigoRFID: "",
+    status: "ativo",
   });
   const [bloco, setBloco] = useState("");
   const [numero, setNumero] = useState("");
@@ -85,11 +87,18 @@ export default function EditUser() {
         email: usuario.email || "",
         phone: formatPhone(usuario.telefone || ""),
         document: formatCPF(usuario.documento || ""),
-        accessLevel: usuario.nivelAcesso === 1 ? "funcionario" : usuario.nivelAcesso === 3 ? "sindico" : "morador",
+        accessLevel:
+          usuario.nivelAcesso === 2
+            ? "sindico"
+            : usuario.nivelAcesso === 3
+            ? "funcionario"
+            : usuario.nivelAcesso === 4
+            ? "morador"
+            : "",
         apartmentId: usuario.apartamentoId?.toString() || "",
         codigoRFID: usuario.codigoRFID || "",
+        status: usuario.status ? "ativo" : "inativo",
       });
-
       // Conversão explícita para string para evitar erro .trim()
       setBloco(usuario.apartamento?.bloco ? String(usuario.apartamento.bloco) : "");
       setNumero(usuario.apartamento?.numero ? String(usuario.apartamento.numero) : "");
@@ -217,7 +226,7 @@ export default function EditUser() {
   apartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(formData.apartmentId) || null,
   apartamento: null,
   codigoRFID: formData.codigoRFID || null,
-  status: true,
+  status: formData.status === "ativo",
   isTemporaryPassword: false,
   dataCadastro: new Date().toISOString()
 };
@@ -277,31 +286,32 @@ export default function EditUser() {
           Redefinir Senha
         </Button>
          <Button
-      type="button"
-      onClick={async () => {
-        if (confirm("Tem certeza que deseja excluir este usuário?")) {
-          try {
-            const res = await fetch(`${API_URL}/api/Usuario/ExcluirUsuario/${id}`, {
-              method: "DELETE",
-            });
-            if (res.ok) {
-              setApiError("Usuário excluído com sucesso.");
-              setTimeout(() => router.push("/usuarios"), 1500);
-            } else {
-              setApiError("Falha ao excluir o usuário.");
-            }
-          } catch (err) {
-            console.error("Erro ao excluir usuário:", err);
-            setApiError("Erro ao tentar excluir o usuário.");
-          }
+  type="button"
+  onClick={async () => {
+    if (confirm("Tem certeza que deseja excluir este usuário?")) {
+      try {
+        const res = await fetch(`${API_URL}/api/Usuario/ExcluirUsuario/${id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setApiError("Usuário excluído com sucesso.");
+          setTimeout(() => router.push("/usuarios"), 900);
+        } else {
+          setApiError("Falha ao excluir o usuário.");
         }
-      }}
-      disabled={isLoading}
-      variant="ghost"
-      className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium"
-    >
-      Remover usuário
-    </Button>
+      } catch (err) {
+        console.error("Erro ao excluir usuário:", err);
+        setApiError("Erro ao tentar excluir o usuário.");
+      }
+    }
+  }}
+  disabled={isLoading}
+  variant="ghost"
+  className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1"
+>
+  <FiTrash2 size={16} />
+  Remover usuário
+</Button>
         <Button
           type="submit"
           form="editUserForm"
@@ -328,130 +338,152 @@ export default function EditUser() {
       )}
 
       <form onSubmit={handleSubmit} id="editUserForm" className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Nome completo"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="usuario@condominio.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
+  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
+      <Input
+        id="name"
+        name="name"
+        placeholder="Nome completo"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        disabled={isLoading}
+      />
+      {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+    </div>
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
+      <Input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="usuario@condominio.com"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        disabled={isLoading}
+      />
+      {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
+    </div>
+  </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
-            <Input
-              id="phone"
-              name="phone"
-              placeholder="(99) 99999-9999"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
-            <Input
-              id="document"
-              name="document"
-              placeholder="000.000.000-00"
-              value={formData.document}
-              onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
+  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
+      <Input
+        id="phone"
+        name="phone"
+        placeholder="(99) 99999-9999"
+        value={formData.phone}
+        onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+        disabled={isLoading}
+      />
+      {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
+    </div>
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
+      <Input
+        id="document"
+        name="document"
+        placeholder="000.000.000-00"
+        value={formData.document}
+        onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
+        disabled={isLoading}
+      />
+      {errors.document && <p className="text-sm text-red-600 mt-1">{errors.document}</p>}
+    </div>
+  </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
-            <select
-              id="accessLevel"
-              name="accessLevel"
-              value={formData.accessLevel}
-              onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
-              disabled={isLoading}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
-            >
-              <option value="">Selecione</option>
-              <option value="funcionario">Funcionário</option>
-              <option value="morador">Morador</option>
-              <option value="sindico">Síndico</option>
-            </select>
-          </div>
+  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
+      <select
+        id="accessLevel"
+        name="accessLevel"
+        value={formData.accessLevel}
+        onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
+        disabled={isLoading}
+        className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+      >
+        <option value="">Selecione</option>
+        <option value="funcionario">Funcionário</option>
+        <option value="morador">Morador</option>
+        <option value="sindico">Síndico</option>
+      </select>
+      {errors.accessLevel && <p className="text-sm text-red-600 mt-1">{errors.accessLevel}</p>}
+    </div>
 
-          {formData.accessLevel && formData.accessLevel !== "funcionario" && (
-            <div className="flex flex-col w-full sm:w-1/2">
-              <label className="mb-2 font-medium text-gray-700">Buscar Apartamento</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Bloco"
-                  value={bloco}
-                  onChange={(e) => setBloco(e.target.value)}
-                  disabled={isLoading}
-                  className="border border-gray-300 w-full"
-                />
-                <Input
-                  placeholder="Número"
-                  value={numero}
-                  onChange={(e) => setNumero(e.target.value)}
-                  disabled={isLoading}
-                  className="border border-gray-300 w-full"
-                />
-                <Button
-                  type="button"
-                  onClick={buscarApartamento}
-                  disabled={isLoading}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-                >
-                  <FiSearch size={20} />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="status" className="mb-2 font-medium text-gray-700">Status</label>
+      <select
+        id="status"
+        name="status"
+        value={formData.status}
+        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+        disabled={isLoading}
+        className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+      >
+        <option value="ativo">Ativo</option>
+        <option value="inativo">Inativo</option>
+      </select>
+    </div>
+  </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-end">
-          <div className="flex flex-col w-full sm:w-1/2">
-            <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
-            <div className="flex gap-2">
-              <Input
-                id="codigoRFID"
-                name="codigoRFID"
-                placeholder="Ex: ABCD1234"
-                value={formData.codigoRFID}
-                readOnly
-                className="border border-gray-300 focus:border-indigo-500 flex-grow"
-              />
-              <Button
-                type="button"
-                onClick={handleReadRFID}
-                disabled={isLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-              >
-                {isLoading ? "Lendo..." : "Ler RFID"}
-              </Button>
-            </div>
-          </div>
+  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-end">
+    {formData.accessLevel && formData.accessLevel !== "funcionario" && (
+      <div className="flex flex-col w-full sm:w-1/2">
+        <label className="mb-2 font-medium text-gray-700">Buscar Apartamento</label>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Bloco"
+            value={bloco}
+            onChange={(e) => setBloco(e.target.value)}
+            disabled={isLoading}
+            className="border border-gray-300 w-full"
+          />
+          <Input
+            placeholder="Número"
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
+            disabled={isLoading}
+            className="border border-gray-300 w-full"
+          />
+          <Button
+            type="button"
+            onClick={buscarApartamento}
+            disabled={isLoading}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
+          >
+            <FiSearch size={20} />
+          </Button>
         </div>
-      </form>
+        {errors.apartmentId && <p className="text-sm text-red-600 mt-1">{errors.apartmentId}</p>}
+      </div>
+    )}
+
+    <div className="flex flex-col w-full sm:w-1/2">
+      <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
+      <div className="flex gap-2">
+        <Input
+          id="codigoRFID"
+          name="codigoRFID"
+          placeholder="Ex: ABCD1234"
+          value={formData.codigoRFID}
+          readOnly
+          className="border border-gray-300 focus:border-indigo-500 flex-grow"
+        />
+        <Button
+          type="button"
+          onClick={handleReadRFID}
+          disabled={isLoading}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
+        >
+          {isLoading ? "Lendo..." : "Ler RFID"}
+        </Button>
+      </div>
+      {errors.codigoRFID && <p className="text-sm text-red-600 mt-1">{errors.codigoRFID}</p>}
+    </div>
+  </div>
+</form>
     </div>
   </div>
 );

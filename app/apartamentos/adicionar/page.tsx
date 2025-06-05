@@ -162,9 +162,9 @@ export default function AddApartmentPage() {
                   disabled={isLoading}
                   className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
                 >
-                  <option value={1}>Disponível</option> {/* Valor numérico correspondente ao enum */}
-                  <option value={2}>Ocupado</option> {/* Valor numérico correspondente ao enum */}
-                  <option value={3}>Em manutenção</option> {/* Valor numérico correspondente ao enum */}
+                  <option value={1}>Disponível</option> 
+                  <option value={2}>Ocupado</option> 
+                  <option value={3}>Em manutenção</option>
                 </select>
               </div>
             </div>

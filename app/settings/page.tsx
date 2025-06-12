@@ -1,25 +1,26 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { BsChevronDoubleLeft } from "react-icons/bs";
 
 interface Perfil {
-  UsuarioId: number
-  Documento: string
-  NivelAcesso: string
-  Nome?: string
-  Email?: string
-  Telefone?: string
-  Bloco?: string
-  Apartamento?: string
-  DataCadastro?: string
+  UsuarioId: number;
+  Documento: string;
+  NivelAcesso: string;
+  Nome?: string;
+  Email?: string;
+  Telefone?: string;
+  Bloco?: string;
+  Apartamento?: string;
+  DataCadastro?: string;
 }
 
 export default function Profile() {
-  const [user, setUser] = useState<Perfil | null>(null)
-  const [showHelp, setShowHelp] = useState(false)
-  const router = useRouter()
+  const [user, setUser] = useState<Perfil | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -55,11 +56,11 @@ export default function Profile() {
   }, []);
 
   const handleChangePassword = () => {
-    router.push("/changePassword")
-  }
+    router.push("/changePassword");
+  };
 
   if (!user) {
-    return <div className="p-8 text-center">Carregando perfil...</div>
+    return <div className="p-8 text-center">Carregando perfil...</div>;
   }
 
   const displayOrDash = (value?: string | number | null) => {
@@ -67,7 +68,21 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Barra Superior */}
+      <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex justify-between items-center shadow-sm">
+  <Button
+    type="button"
+    onClick={() => router.back()}
+    variant="ghost"
+    className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+  >
+    <BsChevronDoubleLeft size={16} />
+    Voltar
+  </Button>
+</div>
+
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Meu Perfil</h1>
 
@@ -131,5 +146,5 @@ export default function Profile() {
         )}
       </div>
     </div>
-  )
+  );
 }

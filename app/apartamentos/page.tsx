@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { BsChevronDoubleLeft } from "react-icons/bs";
+import { FiFileText } from "react-icons/fi";
+
 
 interface Apartamento {
   id: number;
@@ -75,23 +77,34 @@ export default function ApartamentsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="sticky top-0 z-20 bg-white border-b px-4 sm:px-6 md:px-8 py-2 flex justify-between items-center shadow-sm">
-        <Button
-          type="button"
-          onClick={() => router.push("/home")}
-          variant="ghost"
-          className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
-        >
-          <BsChevronDoubleLeft size={16} />
-          Voltar
-        </Button>
+  <Button
+    type="button"
+    onClick={() => router.push("/home")}
+    variant="ghost"
+    className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+  >
+    <BsChevronDoubleLeft size={16} />
+    Voltar
+  </Button>
 
-        <Button
-          className="bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3"
-          onClick={() => router.push("/apartamentos/adicionar")}
-        >
-          <span className="mr-2">+</span> Novo apartamento
-        </Button>
-      </div>
+  <div className="flex items-center gap-2">
+    <Button
+      type="button"
+      variant="ghost"
+      className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+    >
+      <FiFileText size={16} /> Gerar relatório
+    </Button>
+
+    <Button
+      className="bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3"
+      onClick={() => router.push("/apartamentos/adicionar")}
+    >
+      <span className="mr-2">+</span> Novo apartamento
+    </Button>
+  </div>
+</div>
+
 
       {/* Conteúdo principal */}
       <div className="max-w-[70rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">

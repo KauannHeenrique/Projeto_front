@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { BsChevronDoubleLeft } from "react-icons/bs";
-import { FiPlus, FiSearch } from "react-icons/fi";
+import { FiPlus, FiSearch, FiFileText } from "react-icons/fi";
+
 
 interface Acesso {
   id: number;
   nome: string;
   nivelAcesso: string;
   dataHoraEntrada: string;
-  entradaPor: string;
 }
 
 export default function RegistroAcessosPage() {
@@ -27,6 +27,7 @@ export default function RegistroAcessosPage() {
   const [modoCombinar, setModoCombinar] = useState(false);
   const [nivelAcesso, setNivelAcesso] = useState("");
   const [ordemDataAsc, setOrdemDataAsc] = useState(true);
+  
 
   const formatCPF = (value: string): string => {
     const digits = value.replace(/\D/g, "");
@@ -63,6 +64,8 @@ export default function RegistroAcessosPage() {
           setOrdemDataAsc(!ordemDataAsc);
         };
 
+        const totalExibidos = acessos.length;
+        
   const validarFiltros = () => {
     const algumPreenchido =
       valorFiltro.trim() || dataInicio.trim() || dataFim.trim() || nivelAcesso.trim();
@@ -197,26 +200,44 @@ export default function RegistroAcessosPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Barra Superior */}
       <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex justify-between items-center shadow-sm">
-        <Button
-          type="button"
-          onClick={() => router.push("/home")}
-          variant="ghost"
-          className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
-        >
-          <BsChevronDoubleLeft size={16} /> Voltar
-        </Button>
+  {/* Botão à esquerda */}
+  <Button
+    type="button"
+    onClick={() => router.push("/home")}
+    variant="ghost"
+    className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+  >
+    <BsChevronDoubleLeft size={16} /> Voltar
+  </Button>
 
-        <Button
-          onClick={() => router.push("/accessLog/add")}
-          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm flex items-center gap-2"
-        >
-          <FiPlus size={16} /> Adicionar Registro
-        </Button>
-      </div>
+  {/* Botões à direita agrupados */}
+  <div className="flex items-center gap-2">
+    <Button
+      type="button"
+      variant="ghost"
+      className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+    >
+      <FiFileText size={16} /> Gerar relatório
+    </Button>
+    <Button
+      onClick={() => router.push("/accessLog/add")}
+      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm flex items-center gap-2"
+    >
+      <FiPlus size={16} /> Adicionar Registro
+    </Button>
+  </div>
+</div>
+
 
       {/* Filtros */}
 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h1 className="text-xl font-bold">Registro de Acessos</h1>
+        <div className="flex justify-between items-center mb-6 flex-wrap">
+  <h1 className="text-xl md:text-2xl font-bold">Registro de Acessos</h1>
+  <span className="text-sm text-gray-600">
+    Total de acessos: {totalExibidos}
+  </span>
+</div>
+
 
         {erros && <div className="bg-red-100 text-red-700 p-3 rounded">{erros}</div>}
 
@@ -291,14 +312,14 @@ export default function RegistroAcessosPage() {
                 }}
               />
               <Input
-                type="text"
-                placeholder="Documento"
-                value={filtroTipo === "documento" ? valorFiltro : ""}
-                onChange={(e) => {
-                  setFiltroTipo("documento");
-                  setValorFiltro(e.target.value);
-                }}
-              />
+  type="text"
+  placeholder="Documento"
+  value={filtroTipo === "documento" ? formatCPF(valorFiltro) : valorFiltro}
+  onChange={(e) => {
+    setFiltroTipo("documento");
+    setValorFiltro(e.target.value);
+  }}
+/>
               <select
                 value={nivelAcesso}
                 onChange={(e) => setNivelAcesso(e.target.value)}
@@ -351,7 +372,6 @@ export default function RegistroAcessosPage() {
               <thead className="bg-gray-100">
   <tr>
     <th className="px-4 py-2 text-left">Nome</th>
-    <th className="px-4 py-2 text-center">Entrada por</th>
     <th className="px-4 py-2 text-center">Nível de acesso</th>
     <th
       className="px-4 py-2 text-center cursor-pointer hover:underline"
@@ -365,6 +385,7 @@ export default function RegistroAcessosPage() {
     >
       Hora {ordemDataAsc ? "↑" : "↓"}
     </th>
+    <th className="px-4 py-3 text-center">Ações</th>
   </tr>
 </thead>
 
@@ -372,12 +393,14 @@ export default function RegistroAcessosPage() {
                 {acessos.map((a) => (
                   <tr key={a.id} className="border-t">
                     <td className="px-4 py-2 text-left font-bold">{a.nome}</td>
-                    <td className="px-4 py-2 text-center">
-                      {a.entradaPor === "1" ? "TAG" : a.entradaPor === "0" ? "Manual" : "Desconhecido"}
-                    </td>
                     <td className="px-4 py-2 capitalize text-center">{a.nivelAcesso}</td>
                     <td className="px-4 py-2 text-center">{extrairData(a.dataHoraEntrada)}</td>
                     <td className="px-4 py-2 text-center">{extrairHora(a.dataHoraEntrada)}</td>
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <Button size="sm" variant="outline" onClick={() => router.push(`/accessLog/${a.id}/detalhes`)}>
+                        Ver detalhes
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

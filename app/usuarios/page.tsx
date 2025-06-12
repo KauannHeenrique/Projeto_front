@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiFileText } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 
 function useWindowSize() {
@@ -55,7 +55,7 @@ export default function UsuariosPage() {
   const [filtroApartamento, setFiltroApartamento] = useState("");
   const [filtroNivel, setFiltroNivel] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
-
+  
   const formatarCPF = (cpf: string) => {
   const digits = cpf.replace(/\D/g, "");
   if (digits.length <= 3) return digits;
@@ -63,6 +63,8 @@ export default function UsuariosPage() {
   if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 };
+
+
 
 
   useEffect(() => {
@@ -139,30 +141,77 @@ export default function UsuariosPage() {
     }
   });
 
+  const totalExibidos = filteredUsers.length;
+
+  const [modoOrdenacao, setModoOrdenacao] = useState<"az" | "recentes" | "antigos">("az");
+
+const toggleOrdenacao = () => {
+  const proximoModo = modoOrdenacao === "az"
+    ? "recentes"
+    : modoOrdenacao === "recentes"
+    ? "antigos"
+    : "az";
+  setModoOrdenacao(proximoModo);
+};
+
+const getOrdenados = () => {
+  const copia = [...filteredUsers];
+  switch (modoOrdenacao) {
+    case "az":
+      return copia.sort((a, b) => a.nome.localeCompare(b.nome));
+    case "recentes":
+      return copia.sort((a, b) => b.id - a.id);
+    case "antigos":
+      return copia.sort((a, b) => a.id - b.id);
+    default:
+      return copia;
+  }
+};
+
+const usuariosOrdenados = getOrdenados();
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="sticky top-0 z-20 bg-white border-b shadow-sm w-full">
-        <div className="px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
-          <Button
-            type="button"
-            onClick={() => router.push("/home")}
-            variant="ghost"
-            className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
-          >
-            <BsChevronDoubleLeft size={16} /> Voltar
-          </Button>
-          <Button
-            type="button"
-            onClick={() => router.push("/usuarios/adicionar")}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm rounded font-semibold"
-          >
-            <span className="mr-1 text-lg">+</span> Novo usuário
-          </Button>
-        </div>
-      </div>
+  <div className="px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+    <Button
+      type="button"
+      onClick={() => router.push("/home")}
+      variant="ghost"
+      className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+    >
+      <BsChevronDoubleLeft size={16} /> Voltar
+    </Button>
+
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        variant="ghost"
+        className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+      >
+        <FiFileText size={16} /> Gerar relatório
+      </Button>
+
+      <Button
+        type="button"
+        onClick={() => router.push("/usuarios/adicionar")}
+        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm rounded font-semibold"
+      >
+        <span className="mr-1 text-lg">+</span> Novo usuário
+      </Button>
+    </div>
+  </div>
+</div>
+
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h1 className="text-xl font-bold mb-4">Usuários</h1>
+        <div className="flex justify-between items-center mb-4 flex-wrap">
+  <h1 className="text-xl md:text-2xl font-bold">Usuários</h1>
+  <span className="text-sm text-gray-600">
+    Total de usuários ativos: {totalExibidos}
+  </span>
+</div>
 
         {!modoCombinar ? (
           <div className="relative grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-8">
@@ -294,7 +343,16 @@ export default function UsuariosPage() {
             <table className="min-w-full text-sm text-center text-gray-600">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100">
                 <tr>
-                  <th className="px-4 py-3 text-left">Nome</th>
+                  <th
+  className="px-4 py-3 text-left cursor-pointer select-none"
+  onClick={toggleOrdenacao}
+>
+  Nome&nbsp;
+  {modoOrdenacao === "az" && "↑"}
+  {modoOrdenacao === "recentes" && "↑"}
+  {modoOrdenacao === "antigos" && "↓"}
+</th>
+
                   <th className="px-4 py-3">Bloco</th>
                   <th className="px-4 py-3">Apartamento</th>
                   <th className="px-4 py-3">Nível de Acesso</th>
@@ -302,7 +360,7 @@ export default function UsuariosPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user, index) => (
+                {usuariosOrdenados.map((user, index) => (
                   <tr
                     key={`${user.id}-${index}`}
                     className="border-b hover:bg-gray-50 transition cursor-pointer"

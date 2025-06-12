@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { FiFileText } from "react-icons/fi"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +43,7 @@ export function Header() {
           {/* Desktop buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/relatorios" className="text-sm font-medium text-gray-700 hover:text-[#26c9a8] flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
+              <FiFileText className="h-4 w-4 mr-2" />
               Relatórios
             </Link>
 

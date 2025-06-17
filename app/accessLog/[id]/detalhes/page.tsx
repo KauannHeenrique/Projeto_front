@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BsChevronDoubleLeft } from "react-icons/bs";
+import api from "@/services/api";
+import { formatCPF, formatCNPJ } from "@/services/formatValues";
 
 interface AcessoDetalhado {
   nome: string;
@@ -22,32 +24,20 @@ interface AcessoDetalhado {
 export default function DetalhesAcessoPage() {
   const router = useRouter();
   const { id } = useParams();
-  const API_URL = "http://172.20.10.2:5263";
   const [detalhes, setDetalhes] = useState<AcessoDetalhado | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  const formatarDocumento = (doc: string) => {
-  const somenteNumeros = doc.replace(/\D/g, "");
-  if (somenteNumeros.length === 11) {
-    return somenteNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  } else if (somenteNumeros.length === 14) {
-    return somenteNumeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
-  } else {
-    return doc;
-  }
-};
-
-
   useEffect(() => {
     const fetchAcesso = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/AcessoEntradaMorador/BuscarEntradaPorId?id=${id}`);
-        const data = await response.json();
+       try {
+      const { data } = await api.get("/AcessoEntradaMorador/BuscarEntradaPorId", {
+        params: { id },
+      });
 
-        if (!response.ok || !data) {
-          setErro("Acesso não encontrado.");
-          return;
-        }
+      if (!data || !data.usuario) {
+        setErro("Acesso não encontrado.");
+        return;
+      }
 
         setDetalhes({
           nome: data.usuario.nome,
@@ -121,8 +111,13 @@ export default function DetalhesAcessoPage() {
       <div>
         <h2 className="text-xl font-semibold">{detalhes.nome}</h2>
         <p className="text-gray-500 text-sm">
-          Documento: {formatarDocumento(detalhes.documento)}
-        </p>
+  Documento: {
+    detalhes.documento.replace(/\D/g, "").length === 11
+      ? formatCPF(detalhes.documento)
+      : formatCNPJ(detalhes.documento)
+  }
+</p>
+
       </div>
     </div>
 

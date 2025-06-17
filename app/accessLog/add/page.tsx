@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { FiUser, FiUsers, FiSave } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { useAuth } from "@/hooks/useAuth";
+import api from "@/services/api";
 
 export default function AddManualEntry() {
   const router = useRouter();
@@ -30,11 +31,12 @@ export default function AddManualEntry() {
   const buscarMorador = async () => {
   const cpfLimpo = cpf.replace(/\D/g, "");
   try {
-    const response = await fetch(`http://172.20.10.2:5263/api/Usuario/BuscarUsuarioPor?documento=${cpfLimpo}`);
-    const data = await response.json();
+    const { data } = await api.get("/Usuario/BuscarUsuarioPor", {
+      params: { documento: cpfLimpo },
+    });
 
-    if (response.ok && Array.isArray(data) && data.length > 0) {
-      setMorador(data[0]); // 👈 Corrigido aqui
+    if (Array.isArray(data) && data.length > 0) {
+      setMorador(data[0]);
       setMensagem("");
     } else {
       setMorador(null);
@@ -46,30 +48,26 @@ export default function AddManualEntry() {
 };
 
 
+
   const salvarEntrada = async () => {
-    if (!morador || !user) return;
-    const body = {
-      usuarioId: morador.usuarioId,
-      observacao,
-      registradoPor
-    };
-    try {
-      const response = await fetch(`http://172.20.10.2:5263/api/AcessoEntradaMorador/RegistrarEntradaManual`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setMensagem("Entrada registrada com sucesso!");
-        setTimeout(() => router.push("/accessLog"), 2000);
-      } else {
-        setMensagem(data.mensagem || "Erro ao registrar entrada.");
-      }
-    } catch {
-      setMensagem("Erro ao conectar com a API.");
-    }
+  if (!morador || !user) return;
+
+  const body = {
+    usuarioId: morador.usuarioId,
+    observacao,
+    registradoPor,
   };
+
+  try {
+    const { data } = await api.post("/AcessoEntradaMorador/RegistrarEntradaManual", body);
+    setMensagem("Entrada registrada com sucesso!");
+    setTimeout(() => router.push("/accessLog"), 2000);
+  } catch (error: any) {
+    const msg = error?.response?.data?.mensagem || "Erro ao registrar entrada.";
+    setMensagem(msg);
+  }
+};
+
 
   if (loading) {
     return (
@@ -106,7 +104,7 @@ export default function AddManualEntry() {
 
       {/* Conteúdo */}
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-xl font-bold mb-6">Registrar Entrada Manual</h1>
+        <h1 className="text-xl font-bold text-center mb-6">Registrar Entrada Manual</h1>
 
         {!tipo && (
           <div className="space-y-4">

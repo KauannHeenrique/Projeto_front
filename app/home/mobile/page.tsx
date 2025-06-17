@@ -88,7 +88,6 @@ export default function HomeMobile() {
         <StatCard
           icon={<KeyRound size={20} />}
           label="Entradas hoje"
-          value={totalEntradas}
           onClick={() => router.push(`/accessLog?usuarioId=${user?.usuarioId}`)}
         />
 
@@ -199,8 +198,15 @@ export default function HomeMobile() {
           </div>
         )}
 
-        {abaAtiva === "sindico" && isSindico && renderSindicoView()}
-        {abaAtiva === "morador" && renderMoradorView()}
+        {isSindico ? (
+  <>
+    {abaAtiva === "sindico" && renderSindicoView()}
+    {abaAtiva === "morador" && renderMoradorView()}
+  </>
+) : (
+  renderMoradorView()
+)}
+
 
         <div className="pt-6">
           <h2 className="text-base font-semibold mb-3">Atividade Recente</h2>

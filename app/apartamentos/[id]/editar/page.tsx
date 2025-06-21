@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { FiSave, FiTrash2 } from "react-icons/fi";
+import api from "@/services/api";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -21,7 +22,6 @@ import {
 export default function EditApartmentPage() {
   const router = useRouter();
   const { id } = useParams();
-  const API_URL = "http://172.20.10.2:5263";
 
   const [bloco, setBloco] = useState("");
   const [numero, setNumero] = useState("");
@@ -36,18 +36,12 @@ export default function EditApartmentPage() {
     const fetchApartamento = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${API_URL}/api/Apartamento/BuscarApartamentoPorId/${id}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          setBloco(data.bloco || "");
-          setNumero(data.numero || "");
-          setProprietario(data.proprietario || "");
-          setSituacao(data.situacao?.toString() || "1");
-          setObservacoes(data.observacoes || "");
-        } else {
-          setApiError(data.mensagem || "Erro ao carregar apartamento.");
-        }
+        const { data } = await api.get(`/Apartamento/BuscarApartamentoPorId/${id}`);
+setBloco(data.bloco || "");
+setNumero(data.numero || "");
+setProprietario(data.proprietario || "");
+setSituacao(data.situacao?.toString() || "1");
+setObservacoes(data.observacoes || "");
       } catch (err) {
         setApiError("Erro ao conectar com a API.");
       } finally {
@@ -73,22 +67,10 @@ export default function EditApartmentPage() {
     };
 
     try {
-      const response = await fetch(`${API_URL}/api/Apartamento/AtualizarApartamento/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+      await api.put(`/Apartamento/AtualizarApartamento/${id}`, body);
+alert("Apartamento atualizado com sucesso!");
+router.push("/apartamentos");
 
-      const data = await response.json().catch(() => null);
-
-      if (response.ok) {
-        alert("Apartamento atualizado com sucesso!");
-        router.push("/apartamentos");
-      } else {
-        setApiError(data?.mensagem || "Erro ao atualizar apartamento.");
-      }
     } catch (err: any) {
       setApiError("Erro ao conectar com a API: " + (err.message || "verifique a URL ou o servidor."));
     } finally {
@@ -99,17 +81,10 @@ export default function EditApartmentPage() {
   const handleExcluir = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${API_URL}/api/Apartamento/ExcluirApartamento/${id}`, {
-        method: "DELETE",
-      });
+      await api.delete(`/Apartamento/ExcluirApartamento/${id}`);
+alert("Apartamento excluído com sucesso!");
+router.push("/apartamentos");
 
-      if (res.ok) {
-        alert("Apartamento excluído com sucesso!");
-        router.push("/apartamentos");
-      } else {
-        const data = await res.json();
-        setApiError(data?.mensagem || "Erro ao excluir apartamento.");
-      }
     } catch {
       setApiError("Erro ao conectar com a API.");
     } finally {
@@ -137,24 +112,7 @@ export default function EditApartmentPage() {
       <div className="flex gap-4">
         <Button
           type="button"
-          onClick={async () => {
-            if (confirm("Tem certeza que deseja excluir este apartamento?")) {
-              try {
-                const res = await fetch(`${API_URL}/api/Apartamento/ExcluirApartamento/${id}`, {
-                  method: "DELETE",
-                });
-                if (res.ok) {
-                  setApiError("Apartamento excluído com sucesso.");
-                  setTimeout(() => router.push("/apartamentos"), 900);
-                } else {
-                  setApiError("Falha ao excluir o apartamento.");
-                }
-              } catch (err) {
-                console.error("Erro ao excluir apartamento:", err);
-                setApiError("Erro ao tentar excluir o apartamento.");
-              }
-            }
-          }}
+          onClick={handleExcluir}
           disabled={isLoading}
           variant="ghost"
           className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1"

@@ -8,6 +8,7 @@ import { FiUser, FiUsers, FiSave } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/services/api";
+import { formatCPF, formatCNPJ, cleanDocument } from "@/services/formatValues"; 
 
 export default function AddManualEntry() {
   const router = useRouter();
@@ -20,17 +21,10 @@ export default function AddManualEntry() {
   const [observacao, setObservacao] = useState("");
   const [mensagem, setMensagem] = useState("");
 
-  const formatCPF = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-  };
-
   const buscarMorador = async () => {
-  const cpfLimpo = cpf.replace(/\D/g, "");
-  try {
+  const cpfLimpo = cleanDocument(cpf);
+
+    try {
     const { data } = await api.get("/Usuario/BuscarUsuarioPor", {
       params: { documento: cpfLimpo },
     });

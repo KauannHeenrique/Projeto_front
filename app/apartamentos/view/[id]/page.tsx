@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { Button } from "@/components/ui/button";
-
+import api from "@/services/api";
+  
 export default function ViewApartmentPage() {
   const router = useRouter();
   const { id } = useParams();
-  const API_URL = "http://172.20.10.2:5263";
 
   const [bloco, setBloco] = useState("");
   const [numero, setNumero] = useState("");
@@ -19,30 +19,26 @@ export default function ViewApartmentPage() {
   const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchApartamento = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`${API_URL}/api/Apartamento/BuscarApartamentoPorId/${id}`);
-        const data = await response.json();
+  const fetchApartamento = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await api.get(`/Apartamento/BuscarApartamentoPorId/${id}`);
+      setBloco(data.bloco || "");
+      setNumero(data.numero || "");
+      setProprietario(data.proprietario || "");
+      setSituacao(data.situacao?.toString() || "1");
+      setObservacoes(data.observacoes || "");
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao conectar com a API.";
+      setApiError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        if (response.ok) {
-          setBloco(data.bloco || "");
-          setNumero(data.numero || "");
-          setProprietario(data.proprietario || "");
-          setSituacao(data.situacao?.toString() || "1");
-          setObservacoes(data.observacoes || "");
-        } else {
-          setApiError(data.mensagem || "Erro ao carregar apartamento.");
-        }
-      } catch (err) {
-        setApiError("Erro ao conectar com a API.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  if (id) fetchApartamento();
+}, [id]);
 
-    if (id) fetchApartamento();
-  }, [id]);
 
   return (
     <div className="min-h-screen bg-gray-50">

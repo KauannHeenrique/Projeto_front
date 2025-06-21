@@ -100,10 +100,10 @@ export function Header() {
           <div className="absolute top-16 left-0 w-full bg-white shadow-md z-50 md:hidden">
             <div className="px-4 py-2 space-y-2">
               <Link
-                href="/relatorios"
+                href="/report"
                 className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-[#26c9a8]"
               >
-                <Calendar className="h-4 w-4 mr-2" />
+                <FiFileText className="h-4 w-4 mr-2" />
                 Relatórios
               </Link>
               <Link

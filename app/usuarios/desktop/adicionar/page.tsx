@@ -5,8 +5,11 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { FiSearch, FiSave } from "react-icons/fi";
+import { FiUsers, FiUser, FiSearch, FiSave } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
+import { formatCPF, formatPhone, cleanDocument } from "@/services/formatValues";
+import api from "@/services/api";
+import rfid from "@/services/rfid_url";
 
 interface FormData {
   name: string;
@@ -49,7 +52,11 @@ export default function AddUser() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const API_URL = "http://172.20.10.2:5263";
+  useEffect(() => {
+  if (tipoCadastro === "visitante") {
+    router.push("/visitors/add");
+  }
+}, [tipoCadastro, router]);
 
   // Fechar popover ao clicar fora
   useEffect(() => {
@@ -78,20 +85,6 @@ export default function AddUser() {
     }
   }, [formData.accessLevel]);
 
-  const formatPhone = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-  };
-
-  const formatCPF = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-  };
 
   const isValidCPF = (cpf: string): boolean => {
     const digits = cpf.replace(/\D/g, "");
@@ -109,36 +102,33 @@ export default function AddUser() {
   };
 
   const buscarApartamento = async () => {
-    if (!bloco.trim() || !numero.trim()) {
-      setApiError("Informe o bloco e número do apartamento.");
-      return;
+  const blocoLimpo = bloco.trim().toUpperCase();
+  const numeroLimpo = numero.trim();
+
+  if (!blocoLimpo || !numeroLimpo) {
+    setApiError("Informe o bloco e número do apartamento.");
+    return;
+  }
+
+  try {
+    const { data } = await api.get("/Apartamento/BuscarApartamentoPor", {
+      params: { bloco: blocoLimpo, numero: numeroLimpo },
+    });
+
+    console.log("Dados recebidos da API (apartamento):", data);
+
+    if (Array.isArray(data) && data.length > 0) {
+      setFormData((prev) => ({ ...prev, apartmentId: data[0].id.toString() }));
+      setApiError("Apartamento encontrado com sucesso!");
+    } else {
+      setFormData((prev) => ({ ...prev, apartmentId: "" }));
+      setApiError("Apartamento não encontrado.");
     }
-
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append("bloco", bloco);
-      queryParams.append("numero", numero);
-
-      const url = `${API_URL}/api/Apartamento/BuscarApartamentoPor?${queryParams.toString()}`;
-      console.log("Buscando apartamento - URL:", url);
-      const response = await fetch(url);
-      console.log("Resposta da API (apartamento):", response.status, response.statusText);
-
-      const data = await response.json();
-      console.log("Dados recebidos da API (apartamento):", data);
-
-      if (response.ok && Array.isArray(data) && data.length > 0) {
-        setFormData({ ...formData, apartmentId: data[0].id.toString() });
-        setApiError("Apartamento encontrado com sucesso!");
-      } else {
-        setFormData({ ...formData, apartmentId: "" });
-        setApiError("Apartamento não encontrado.");
-      }
-    } catch (err) {
-      setApiError("Erro ao buscar apartamento.");
-      console.error("Erro ao buscar apartamento:", err);
-    }
-  };
+  } catch (err) {
+    console.error("Erro ao buscar apartamento:", err);
+    setApiError("Erro ao buscar apartamento.");
+  }
+};
 
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
@@ -178,33 +168,33 @@ export default function AddUser() {
     return newErrors;
   };
 
-  const handleReadRFID = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setApiError(null);
-    setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
+const handleReadRFID = async () => {
+  if (isLoading) return;
+  setIsLoading(true);
+  setApiError(null);
+  setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
 
-    try {
-      const response = await fetch("http://172.20.10.4/read-rfid");
-      console.log("Resposta da API (RFID):", response.status, response.statusText);
-      const data = await response.json();
-      console.log("Dados recebidos da API (RFID):", data);
+  try {
+    const { data } = await rfid.get("/read-rfid");
 
-      if (data.uid) {
-        setFormData({ ...formData, codigoRFID: data.uid });
-        setApiError("Tag lida com sucesso!");
-      } else {
-        setFormData({ ...formData, codigoRFID: "" });
-        setApiError("Nenhuma tag detectada.");
-      }
-    } catch (err) {
-      setApiError("Erro ao comunicar com o leitor RFID.");
-      console.error("Erro ao ler RFID:", err);
-      setFormData({ ...formData, codigoRFID: "" });
-    } finally {
-      setTimeout(() => setIsLoading(false), 500);
+    console.log("Dados recebidos da API (RFID):", data);
+
+    if (data.uid) {
+      setFormData((prev) => ({ ...prev, codigoRFID: data.uid }));
+      setApiError("Tag lida com sucesso!");
+    } else {
+      setFormData((prev) => ({ ...prev, codigoRFID: "" }));
+      setApiError("Nenhuma tag detectada.");
     }
-  };
+  } catch (err) {
+    console.error("Erro ao ler RFID:", err);
+    setApiError("Erro ao comunicar com o leitor RFID.");
+    setFormData((prev) => ({ ...prev, codigoRFID: "" }));
+  } finally {
+    setTimeout(() => setIsLoading(false), 500);
+  }
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,74 +211,88 @@ export default function AddUser() {
     }
 
     try {
-      const nivelAcessoMap: { [key: string]: number } = {
-        sindico: 2,
-        funcionario: 3,
-        morador: 4,
-      };
+  const nivelAcessoMap: { [key: string]: number } = {
+    sindico: 2,
+    funcionario: 3,
+    morador: 4,
+  };
 
-      const usuario = {
-        Nome: formData.name,
-        Email: formData.email,
-        Telefone: formData.phone.replace(/\D/g, ""),
-        Documento: formData.document.replace(/[\.\-]/g, ""),
-        NivelAcesso: nivelAcessoMap[formData.accessLevel],
-        ApartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(formData.apartmentId) || null,
-        CodigoRFID: formData.codigoRFID || null,
-        Senha: "default123",
-        Status: true,
-      };
+  const usuario = {
+    Nome: formData.name,
+    Email: formData.email,
+    Telefone: cleanDocument(formData.phone),
+    Documento: cleanDocument(formData.document),
+    NivelAcesso: nivelAcessoMap[formData.accessLevel],
+    ApartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(formData.apartmentId) || null,
+    CodigoRFID: formData.codigoRFID || null,
+    Senha: "default123",
+    Status: true,
+  };
 
-      console.log("Enviando dados para a API:", usuario);
+  console.log("Enviando dados para a API:", usuario);
 
-      const response = await fetch(`${API_URL}/api/Usuario/AdicionarUsuario`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(usuario),
-      });
+  const { data } = await api.post("/Usuario/AdicionarUsuario", usuario);
+  console.log("Resposta da API (cadastro):", data);
 
-      console.log("Resposta da API (cadastro):", response.status, response.statusText);
-      const data = await response.json();
-      console.log("Dados recebidos da API (cadastro):", data);
+  setApiError("Morador cadastrado com sucesso!");
+  setTimeout(() => router.push("/usuarios"), 2000);
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao cadastrar morador.";
+  setApiError(msg);
+  console.error("Erro ao cadastrar morador:", msg);
+} finally {
+  setIsLoading(false);
+}
 
-      if (response.ok) {
-        setApiError("Morador cadastrado com sucesso!");
-        setTimeout(() => router.push("/usuarios"), 2000);
-      } else {
-        setApiError(data.mensagem || `Falha ao cadastrar morador: ${response.statusText}`);
-      }
-    } catch (err) {
-      setApiError("Erro ao conectar com a API. Verifique sua conexão ou tente novamente.");
-      console.error("Erro ao cadastrar morador:", err);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
  
 return (
   <>
     {!tipoCadastro && (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-6">
-        <p className="text-gray-700 font-medium text-lg">Deseja cadastrar:</p>
-        <div className="flex gap-6">
-          <button
-            onClick={() => setTipoCadastro("morador")}
-            className="w-40 h-40 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
-          >
-            <span className="font-semibold text-gray-700">Morador</span>
-          </button>
-          <button
-            onClick={() => setTipoCadastro("visitante")}
-            className="w-40 h-40 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
-          >
-            <span className="font-semibold text-gray-700">Visitante</span>
-          </button>
-        </div>
+  <div className="min-h-screen bg-gray-50">
+    {/* Barra Superior com botão Voltar */}
+    <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex items-center shadow-sm">
+      <Button
+        type="button"
+        onClick={() => router.push("/usuarios")}
+        variant="ghost"
+        className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+      >
+        <BsChevronDoubleLeft size={16} />
+        Voltar
+      </Button>
+    </div>
+
+    {/* Conteúdo Central com título e escolha */}
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      <h1 className="text-xl font-bold text-center mb-6">Cadastrar Usuário</h1>
+
+      <p className="text-gray-700 font-medium text-lg text-center mb-4">
+        Deseja cadastrar um:
+      </p>
+
+      <div className="flex gap-6 justify-center">
+        <button
+          onClick={() => setTipoCadastro("morador")}
+          className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <FiUser size={32} className="text-indigo-600" />
+          <span className="font-semibold text-gray-700">Morador</span>
+        </button>
+        <button
+          onClick={() => setTipoCadastro("visitante")}
+          className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <FiUsers size={32} className="text-indigo-600" />
+          <span className="font-semibold text-gray-700">Visitante</span>
+        </button>
       </div>
-    )}
+    </div>
+  </div>
+)}
+
+
 
     {tipoCadastro === "morador" && (
       <div className="min-h-screen bg-gray-50">
@@ -303,15 +307,26 @@ return (
             <BsChevronDoubleLeft size={16} />
             Voltar
           </Button>
-          <Button
-            type="submit"
-            form="addUserForm"
-            disabled={isLoading}
-            className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
-          >
-            <FiSave size={16} />
-            {isLoading ? "Salvando..." : "Salvar"}
-          </Button>
+          <div className="flex items-center gap-2">
+  <Button
+    type="button"
+    onClick={() => setTipoCadastro("")}
+    variant="outline"
+    className="text-sm"
+  >
+    Alterar tipo de cadastro
+  </Button>
+  <Button
+    type="submit"
+    form="addUserForm"
+    disabled={isLoading}
+    className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+  >
+    <FiSave size={16} />
+    {isLoading ? "Salvando..." : "Salvar"}
+  </Button>
+</div>
+
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -444,14 +459,7 @@ return (
                   >
                     {isLoading ? "Lendo..." : "Ler RFID"}
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setTipoCadastro("")}
-                    variant="outline"
-                    className="text-sm ml-2"
-                  >
-                    Alterar tipo de cadastro
-                  </Button>
+                  
                 </div>
               </div>
             </div>

@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { FiSave, FiHelpCircle } from "react-icons/fi";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-
+import api from "@/services/api";
 
 export default function AddApartmentPage() {
   const router = useRouter();
-  const API_URL = "http://172.20.10.2:5263";
-
   const [bloco, setBloco] = useState("");
   const [numero, setNumero] = useState("");
   const [proprietario, setProprietario] = useState("");
@@ -37,36 +35,22 @@ export default function AddApartmentPage() {
     bloco,
     numero,
     proprietario,
-    situacao: situacaoMap[situacao.toLowerCase()] || 1,  // Mapeia a string para o valor numérico do enum
-    observacoes
+    situacao: situacaoMap[situacao.toLowerCase()] || 1,
+    observacoes,
   };
 
-  console.log("Dados enviados para a API:", body);  // Log de dados enviados
-
   try {
-    const response = await fetch(`${API_URL}/api/Apartamento/CadastrarApartamento`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-    console.log("Resposta da API:", data);  // Log da resposta da API
-
-    if (response.ok) {
-      setApiError("Apartamento cadastrado com sucesso!");
-      setTimeout(() => router.push("/apartamentos"), 1500);
-    } else {
-      setApiError(data.mensagem || "Erro ao cadastrar apartamento.");
-    }
-  } catch (err) {
-    setApiError("Erro ao conectar com a API.");
+    const { data } = await api.post("/Apartamento/CadastrarApartamento", body);
+    setApiError("Apartamento cadastrado com sucesso!");
+    setTimeout(() => router.push("/apartamentos"), 1500);
+  } catch (err: any) {
+    const msg = err?.response?.data?.mensagem || "Erro ao conectar com a API.";
+    setApiError(msg);
   } finally {
     setIsLoading(false);
   }
 };
+
 
   return (
     <TooltipProvider>

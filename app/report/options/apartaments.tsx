@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import api from "@/services/api";
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState("");

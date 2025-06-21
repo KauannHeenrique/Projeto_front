@@ -6,6 +6,10 @@ import { Input } from "@/components/ui/input";
 import { useRouter, useParams } from "next/navigation";
 import { FiSearch, FiSave, FiRefreshCw, FiTrash2 } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
+import { formatCPF, formatPhone, cleanDocument } from "@/services/formatValues";
+import api from "@/services/api";
+import rfid from "@/services/rfid_url";
+
 
 interface FormData {
   name: string;
@@ -32,8 +36,6 @@ export default function EditUser() {
   const router = useRouter();
   const { id } = useParams();
   
-  const API_URL = "http://172.20.10.2:5263";
-
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -53,19 +55,16 @@ export default function EditUser() {
   const handleResetPassword = async () => {
   if (!id) return;
   try {
-    const response = await fetch(`${API_URL}/api/Usuario/ResetarSenha/${id}`, {
-      method: "PUT",
-    });
-    if (response.ok) {
-      setApiError("Senha redefinida com sucesso!");
-    } else {
-      setApiError("Falha ao redefinir a senha do usuário.");
-    }
-  } catch (error) {
-    console.error("Erro ao redefinir senha:", error);
-    setApiError("Erro ao tentar redefinir a senha.");
-  }
+  await api.put(`/Usuario/ResetarSenha/${id}`);
+  setApiError("Senha redefinida com sucesso!");
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao redefinir a senha.";
+  console.error("Erro ao redefinir senha:", msg);
+  setApiError(msg);
+}
+
 };
+
 
   
 
@@ -73,41 +72,42 @@ export default function EditUser() {
   const fetchUser = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/Usuario/BuscarUsuarioPor?id=${id}`);
-      const data = await response.json();
-      const usuario = Array.isArray(data) ? data[0] : data;
+  const { data } = await api.get("/Usuario/BuscarUsuarioPor", {
+    params: { id }
+  });
 
-      if (!usuario) {
-        setApiError("Usuário não encontrado.");
-        return;
-      }
+  const usuario = Array.isArray(data) ? data[0] : data;
 
-      setFormData({
-        name: usuario.nome || "",
-        email: usuario.email || "",
-        phone: formatPhone(usuario.telefone || ""),
-        document: formatCPF(usuario.documento || ""),
-        accessLevel:
-          usuario.nivelAcesso === 2
-            ? "sindico"
-            : usuario.nivelAcesso === 3
-            ? "funcionario"
-            : usuario.nivelAcesso === 4
-            ? "morador"
-            : "",
-        apartmentId: usuario.apartamentoId?.toString() || "",
-        codigoRFID: usuario.codigoRFID || "",
-        status: usuario.status ? "ativo" : "inativo",
-      });
-      // Conversão explícita para string para evitar erro .trim()
-      setBloco(usuario.apartamento?.bloco ? String(usuario.apartamento.bloco) : "");
-      setNumero(usuario.apartamento?.numero ? String(usuario.apartamento.numero) : "");
+  if (!usuario) {
+    setApiError("Usuário não encontrado.");
+    return;
+  }
 
-    } catch (err) {
-      setApiError("Erro ao carregar dados do usuário.");
-    } finally {
-      setIsLoading(false);
-    }
+  setFormData({
+    name: usuario.nome || "",
+    email: usuario.email || "",
+    phone: formatPhone(usuario.telefone || ""),
+    document: formatCPF(usuario.documento || ""),
+    accessLevel:
+      usuario.nivelAcesso === 2
+        ? "sindico"
+        : usuario.nivelAcesso === 3
+        ? "funcionario"
+        : usuario.nivelAcesso === 4
+        ? "morador"
+        : "",
+    apartmentId: usuario.apartamentoId?.toString() || "",
+    codigoRFID: usuario.codigoRFID || "",
+    status: usuario.status ? "ativo" : "inativo",
+  });
+
+  setBloco(usuario.apartamento?.bloco ? String(usuario.apartamento.bloco) : "");
+  setNumero(usuario.apartamento?.numero ? String(usuario.apartamento.numero) : "");
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao carregar dados do usuário.";
+  setApiError(msg);
+}
+
   };
 
   if (id) fetchUser();
@@ -122,72 +122,60 @@ export default function EditUser() {
     }
   }, [formData.accessLevel]);
 
-  const formatPhone = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-  };
-
-  const formatCPF = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-  };
-
   const handleReadRFID = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setApiError(null);
-    setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
+  if (isLoading) return;
+  setIsLoading(true);
+  setApiError(null);
+  setErrors((prev) => ({ ...prev, codigoRFID: undefined }));
 
-    try {
-      const response = await fetch("http://172.20.10.4/read-rfid");
-      const data = await response.json();
+  try {
+    const { data } = await rfid.get("/read-rfid");
 
-      if (data.uid) {
-        setFormData({ ...formData, codigoRFID: data.uid });
-        setApiError("Tag lida com sucesso!");
-      } else {
-        setFormData({ ...formData, codigoRFID: "" });
-        setApiError("Nenhuma tag detectada.");
-      }
-    } catch (err) {
-      setApiError("Erro ao comunicar com o leitor RFID.");
-      setFormData({ ...formData, codigoRFID: "" });
-    } finally {
-      setTimeout(() => setIsLoading(false), 500);
+    console.log("Dados recebidos da API (RFID):", data);
+
+    if (data.uid) {
+      setFormData((prev) => ({ ...prev, codigoRFID: data.uid }));
+      setApiError("Tag lida com sucesso!");
+    } else {
+      setFormData((prev) => ({ ...prev, codigoRFID: "" }));
+      setApiError("Nenhuma tag detectada.");
     }
-  };
+  } catch (err) {
+    console.error("Erro ao ler RFID:", err);
+    setApiError("Erro ao comunicar com o leitor RFID.");
+    setFormData((prev) => ({ ...prev, codigoRFID: "" }));
+  } finally {
+    setTimeout(() => setIsLoading(false), 500);
+  }
+};
 
   const buscarApartamento = async () => {
-  if (!String(bloco).trim() || !String(numero).trim()) {
+  const blocoLimpo = bloco.trim().toUpperCase();
+  const numeroLimpo = numero.trim();
+
+  if (!blocoLimpo || !numeroLimpo) {
     setApiError("Informe o bloco e número do apartamento.");
     return;
   }
 
   try {
-    const queryParams = new URLSearchParams();
-    queryParams.append("bloco", String(bloco));
-    queryParams.append("numero", String(numero));
+    const { data } = await api.get("/Apartamento/BuscarApartamentoPor", {
+      params: { bloco: blocoLimpo, numero: numeroLimpo }
+    });
 
-    const url = `${API_URL}/api/Apartamento/BuscarApartamentoPor?${queryParams.toString()}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (response.ok && Array.isArray(data) && data.length > 0) {
-      setFormData({ ...formData, apartmentId: data[0].id.toString() });
+    if (Array.isArray(data) && data.length > 0) {
+      setFormData((prev) => ({ ...prev, apartmentId: data[0].id.toString() }));
       setApiError("Apartamento encontrado com sucesso!");
     } else {
-      setFormData({ ...formData, apartmentId: "" });
+      setFormData((prev) => ({ ...prev, apartmentId: "" }));
       setApiError("Apartamento não encontrado.");
     }
-  } catch (err) {
-    setApiError("Erro ao buscar apartamento.");
+  } catch (err: any) {
+    const msg = err?.response?.data?.mensagem || "Erro ao buscar apartamento.";
+    setApiError(msg);
   }
 };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -218,11 +206,11 @@ export default function EditUser() {
   const usuario = {
   usuarioId: Number(id),
   nome: formData.name,
-  documento: formData.document.replace(/[\.\-]/g, ""),
+documento: cleanDocument(formData.document),
   email: formData.email,
   senha: "", // opcional, ou a senha original se mantida
   nivelAcesso: nivelAcessoMap[formData.accessLevel],
-  telefone: formData.phone.replace(/\D/g, ""),
+telefone: cleanDocument(formData.phone),
   apartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(formData.apartmentId) || null,
   apartamento: null,
   codigoRFID: formData.codigoRFID || null,
@@ -232,28 +220,18 @@ export default function EditUser() {
 };
 
   try {
-    const response = await fetch(`${API_URL}/api/Usuario/AtualizarUsuario/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(usuario),
-    });
+  const { data } = await api.put(`/Usuario/AtualizarUsuario/${id}`, usuario);
 
-    const data = await response.json();
+  setApiError("Usuário atualizado com sucesso!");
+  setTimeout(() => router.push("/usuarios"), 2000);
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao atualizar usuário.";
+  console.error("Erro ao atualizar usuário:", msg);
+  setApiError(msg);
+} finally {
+  setIsLoading(false);
+}
 
-    if (response.ok) {
-      setApiError("Usuário atualizado com sucesso!");
-      setTimeout(() => router.push("/usuarios"), 2000);
-    } else {
-      setApiError(data.mensagem || `Falha ao atualizar usuário: ${response.statusText}`);
-    }
-  } catch (err) {
-    console.error("Erro ao conectar com a API:", err);
-    setApiError("Erro ao conectar com a API. Verifique sua conexão ou tente novamente.");
-  } finally {
-    setIsLoading(false);
-  }
 };
 
   return (
@@ -290,19 +268,15 @@ export default function EditUser() {
   onClick={async () => {
     if (confirm("Tem certeza que deseja excluir este usuário?")) {
       try {
-        const res = await fetch(`${API_URL}/api/Usuario/ExcluirUsuario/${id}`, {
-          method: "DELETE",
-        });
-        if (res.ok) {
-          setApiError("Usuário excluído com sucesso.");
-          setTimeout(() => router.push("/usuarios"), 900);
-        } else {
-          setApiError("Falha ao excluir o usuário.");
-        }
-      } catch (err) {
-        console.error("Erro ao excluir usuário:", err);
-        setApiError("Erro ao tentar excluir o usuário.");
-      }
+  await api.delete(`/Usuario/ExcluirUsuario/${id}`);
+  setApiError("Usuário excluído com sucesso.");
+  setTimeout(() => router.push("/usuarios"), 900);
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao excluir o usuário.";
+  console.error("Erro ao excluir:", msg);
+  setApiError(msg);
+}
+
     }
   }}
   disabled={isLoading}

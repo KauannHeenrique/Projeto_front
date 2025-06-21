@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "@/services/api";
 
 interface UsuarioLogado {
   usuarioId: number;
@@ -8,7 +9,7 @@ interface UsuarioLogado {
   nivelAcesso: string;
   bloco?: string;
   apartamento?: string;
-  apartamentoId?: number; 
+  apartamentoId?: number;
 }
 
 export function useAuth() {
@@ -18,23 +19,26 @@ export function useAuth() {
   useEffect(() => {
     const fetchPerfil = async () => {
       try {
-        const response = await fetch("http://172.20.10.2:5263/api/Usuario/perfil", {
-          credentials: "include",
+        const { data } = await api.get("/Usuario/perfil", {
+          withCredentials: true,
         });
 
-        if (response.status === 401) {
-          setUser(null);
-          return;
-        }
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
+        setUser({
+          usuarioId: data.usuarioId,
+          nome: data.nome,
+          email: data.email,
+          documento: data.documento,
+          nivelAcesso: data.nivelAcesso,
+          bloco: data.bloco,
+          apartamento: data.apartamento,
+          apartamentoId: data.apartamentoId,
+        });
+      } catch (err: any) {
+        if (err?.response?.status === 401) {
+          setUser(null); // não autorizado
         } else {
-          setUser(null);
+          console.error("Erro ao buscar perfil:", err);
         }
-      } catch (err) {
-        console.error("Erro ao buscar perfil:", err);
         setUser(null);
       } finally {
         setLoading(false);

@@ -9,6 +9,8 @@ import { LockIcon, UserIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { validate } from "@/lib/validate_login"
+import api from "@/services/api";
+import { cleanDocument } from "@/services/formatValues"; 
 
 export default function LoginPage() {
   const [documento, setDocumento] = useState("")
@@ -37,46 +39,34 @@ export default function LoginPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrorMessage("")
+  e.preventDefault();
+  setIsLoading(true);
+  setErrorMessage("");
 
-    try {
-      const cpfLimpo = documento.replace(/\D/g, "")
+  try {
+    const cpfLimpo = cleanDocument(documento);
 
-      const response = await fetch("http://172.20.10.2:5263/api/Usuario/Login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include", // Aceita cookies do backend
-        body: JSON.stringify({
-          cpf: cpfLimpo,
-          senha: senha
-        })
-      })
+    const { data } = await api.post(
+      "/Usuario/Login",
+      { cpf: cpfLimpo, senha },
+      { withCredentials: true }
+    );
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setErrorMessage(data.mensagem || "Credenciais inválidas.")
-        return
-      }
-
-      if (data.redirectTo) {
-        alert(data.mensagem)
-        router.push(data.redirectTo)
-        return
-      }
-
-      router.push("/home")
-    } catch (error) {
-      console.error("Erro ao conectar com a API:", error)
-      setErrorMessage("Erro ao conectar com o servidor.")
-    } finally {
-      setIsLoading(false)
+    if (data.redirectTo) {
+      alert(data.mensagem);
+      router.push(data.redirectTo);
+      return;
     }
+
+    router.push("/home");
+  } catch (err: any) {
+    const msg = err?.response?.data?.mensagem || "Erro ao conectar com o servidor.";
+    setErrorMessage(msg);
+  } finally {
+    setIsLoading(false);
   }
+};
+
 
   return (
     <div className="flex h-screen w-full overflow-hidden">

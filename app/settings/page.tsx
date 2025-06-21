@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BsChevronDoubleLeft } from "react-icons/bs";
+import api from "@/services/api";
+import { formatCPF, formatPhone } from "@/services/formatValues";
+
 
 interface Perfil {
   UsuarioId: number;
@@ -25,31 +28,24 @@ export default function Profile() {
   useEffect(() => {
     const fetchPerfil = async () => {
       try {
-        const response = await fetch("http://172.20.10.2:5263/api/Usuario/perfil", {
-          credentials: "include",
-        });
+  const { data } = await api.get("/Usuario/perfil", { withCredentials: true });
 
-        if (!response.ok) {
-          const error = await response.text();
-          console.error("Erro na resposta:", error);
-          return;
-        }
+  setUser({
+    UsuarioId: data.usuarioId,
+    Documento: data.documento,
+    NivelAcesso: data.nivelAcesso,
+    Nome: data.nome,
+    Email: data.email,
+    Telefone: data.telefone,
+    Bloco: data.bloco,
+    Apartamento: data.apartamento,
+    DataCadastro: data.dataCadastro,
+  });
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao carregar perfil.";
+  console.error("Erro:", msg);
+}
 
-        const data = await response.json();
-        setUser({
-          UsuarioId: data.usuarioId,
-          Documento: data.documento,
-          NivelAcesso: data.nivelAcesso,
-          Nome: data.nome,
-          Email: data.email,
-          Telefone: data.telefone,
-          Bloco: data.bloco,
-          Apartamento: data.apartamento,
-          DataCadastro: data.dataCadastro,
-        });
-      } catch (err) {
-        console.error("Erro na requisição:", err);
-      }
     };
 
     fetchPerfil();
@@ -97,7 +93,8 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-6 gap-y-8 mb-8">
+
           <div>
             <label className="block font-medium text-gray-700 mb-1">Bloco</label>
             <p className="text-gray-800">{displayOrDash(user.Bloco)}</p>
@@ -110,23 +107,26 @@ export default function Profile() {
 
           <div>
             <label className="block font-medium text-gray-700 mb-1">Telefone</label>
-            <p className="text-gray-800">{displayOrDash(user.Telefone)}</p>
+            <p className="text-gray-800">
+            {user.Telefone ? formatPhone(user.Telefone) : "-"}
+          </p>
+
           </div>
 
           <div>
             <label className="block font-medium text-gray-700 mb-1">Data de cadastro</label>
             <p className="text-gray-800">{user.DataCadastro ? new Date(user.DataCadastro).toLocaleDateString() : "-"}</p>
           </div>
-        </div>
+          </div>
 
-        <div className="flex flex-col sm:flex-row justify-end gap-4">
-          <Button variant="outline" onClick={handleChangePassword}>
-            Alterar Senha
-          </Button>
-          <Button variant="outline" onClick={() => setShowHelp(true)}>
-            Ajuda
-          </Button>
-        </div>
+          <div className="flex flex-col sm:flex-row justify-end gap-4">
+            <Button variant="outline" onClick={handleChangePassword}>
+              Alterar Senha
+            </Button>
+            <Button variant="outline" onClick={() => setShowHelp(true)}>
+              Ajuda
+            </Button>
+          </div>
 
         {showHelp && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">

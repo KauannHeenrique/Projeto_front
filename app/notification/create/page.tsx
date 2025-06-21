@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import api from "@/services/api";
 
 export default function CriarNotificacaoPage() {
   const { user } = useAuth();
@@ -24,26 +25,33 @@ export default function CriarNotificacaoPage() {
   ];
 
   const buscarApartamento = async () => {
-    if (!bloco.trim() || !numero.trim()) {
-      setFeedback("Informe o bloco e número.");
-      return;
-    }
+  if (!bloco.trim() || !numero.trim()) {
+    setFeedback("Informe o bloco e número.");
+    return;
+  }
 
-    try {
-      const response = await fetch(
-        `http://172.20.10.2:5263/api/Apartamento/BuscarApartamentoPor?bloco=${bloco}&numero=${numero}`
-      );
-      const data = await response.json();
-      if (response.ok && data.length > 0) {
-        setApartamentoId(data[0].id);
-        setFeedback("Apartamento encontrado.");
-      } else {
-        setApartamentoId(null);
-        setFeedback("Apartamento não encontrado.");
-      }
-    } catch {
-      setFeedback("Erro ao buscar apartamento.");
+  // Limpeza e padronização dos valores antes da requisição
+  const blocoLimpo = bloco.trim().toUpperCase();
+  const numeroLimpo = numero.trim();
+
+  try {
+    const { data } = await api.get("/Apartamento/BuscarApartamentoPor", {
+      params: { bloco: blocoLimpo, numero: numeroLimpo }
+    });
+
+    if (Array.isArray(data) && data.length > 0) {
+      setApartamentoId(data[0].id);
+      setFeedback("Apartamento encontrado.");
+    } else {
+      setApartamentoId(null);
+      setFeedback("Apartamento não encontrado.");
     }
+  } catch {
+    setFeedback("Erro ao buscar apartamento.");
+  }
+};
+
+
   };
 
   const handleSubmit = async () => {
@@ -61,27 +69,19 @@ export default function CriarNotificacaoPage() {
     };
 
     try {
-      const response = await fetch("http://172.20.10.2:5263/api/Notificacao/CriarNotificacao", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  const { data } = await api.post("/Notificacao/CriarNotificacao", payload);
+  setFeedback("Notificação enviada com sucesso.");
+  setTitulo("");
+  setMensagem("");
+  setTipo("");
+  setBloco("");
+  setNumero("");
+  setApartamentoId(null);
+} catch (err: any) {
+  const msg = err?.response?.data?.mensagem || "Erro ao enviar.";
+  setFeedback(msg);
+}
 
-      const data = await response.json();
-      if (response.ok) {
-        setFeedback("Notificação enviada com sucesso.");
-        setTitulo("");
-        setMensagem("");
-        setTipo("");
-        setBloco("");
-        setNumero("");
-        setApartamentoId(null);
-      } else {
-        setFeedback(data.mensagem || "Erro ao enviar.");
-      }
-    } catch {
-      setFeedback("Erro ao conectar com a API.");
-    }
   };
 
   return (

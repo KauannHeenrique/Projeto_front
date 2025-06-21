@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { FiFileText } from "react-icons/fi";
-
+import api from "@/services/api";
 
 interface Apartamento {
   id: number;
@@ -15,7 +15,7 @@ interface Apartamento {
   situacao: number;
 }
 
-export default function ApartamentsPage() {
+export default function ApartmentsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [apartamentos, setApartamentos] = useState<Apartamento[]>([]);
@@ -23,33 +23,30 @@ export default function ApartamentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const API_URL = "http://172.20.10.2:5263";
-
   useEffect(() => {
-    const fetchApartamentos = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`${API_URL}/api/Apartamento/ExibirTodosApartamentos`);
-        if (!res.ok) throw new Error("Erro ao buscar apartamentos");
+  const fetchApartamentos = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await api.get("/Apartamento/ExibirTodosApartamentos");
+      const mapped: Apartamento[] = data.map((a: any) => ({
+        id: a.apartamentoId ?? a.id ?? a.idApartamento ?? 0,
+        bloco: a.bloco || "Desconhecido",
+        numero: String(a.numero || "Desconhecido"),
+        situacao: a.situacao,
+      }));
+      setApartamentos(mapped);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao carregar apartamentos";
+      setError(msg);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        const data = await res.json();
-        const mapped: Apartamento[] = data.map((a: any) => ({
-          id: a.apartamentoId ?? a.id ?? a.idApartamento ?? 0, // tenta várias opções
-          bloco: a.bloco || "Desconhecido",
-          numero: String(a.numero || "Desconhecido"),
-          situacao: a.situacao, // Aqui, a situação deve ser numérica
-        }));
-        setApartamentos(mapped);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar apartamentos");
-        setTimeout(() => setError(null), 5000);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  fetchApartamentos();
+}, []);
 
-    fetchApartamentos();
-  }, []);
 
   const filtered = apartamentos.filter((a) => {
   const termo = searchTerm.trim().toLowerCase();

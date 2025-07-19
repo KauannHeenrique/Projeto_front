@@ -12,11 +12,11 @@ export default function AccessLogRedirect() {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push("/login");
+        router.push("/users");
       } else if ([1, 3].includes(user.nivelAcesso)) {
-        router.push("/home/desktop");
+        router.push("/users/desktop");
       } else {
-        router.push("/home/mobile");
+        router.push("/users/mobile");
       }
     }
   }, [user, loading, router]);

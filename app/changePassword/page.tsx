@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { BsChevronDoubleLeft } from "react-icons/bs";
 import api from "@/services/api";
 
 export default function ChangePasswordPage() {
@@ -32,78 +33,97 @@ export default function ChangePasswordPage() {
     setIsLoading(true);
 
     try {
-  await api.put(
-    "/Usuario/AlterarSenha",
-    {
-      senhaAtual: currentPassword,
-      novaSenha: newPassword
-    },
-    { withCredentials: true }
-  );
+      await api.put(
+        "/Usuario/AlterarSenha",
+        {
+          senhaAtual: currentPassword,
+          novaSenha: newPassword,
+        },
+        { withCredentials: true }
+      );
 
-  setSuccess("Senha alterada com sucesso!");
-  setTimeout(() => router.push("/home"), 900);
-} catch (err: any) {
-  const msg = err?.response?.data?.mensagem || "Erro ao conectar com o servidor.";
-  setError(msg);
-} finally {
-  setIsLoading(false);
-}
-
+      setSuccess("Senha alterada com sucesso!");
+      setTimeout(() => router.push("/home"), 900);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao conectar com o servidor.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-sm bg-white p-6 rounded shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Alterar Senha</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Cabeçalho com botão Voltar */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b px-4 py-3 flex items-center">
+        <Button
+          type="button"
+          onClick={() => router.push("/settings")}
+          variant="ghost"
+          className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+        >
+          <BsChevronDoubleLeft size={16} />
+          Voltar
+        </Button>
+      </div>
 
-        {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
-        {success && <p className="text-green-600 mb-4 text-center">{success}</p>}
+      {/* Conteúdo centralizado */}
+      <div className="flex items-center justify-center px-4 py-6">
+        <div className="w-full max-w-sm bg-white p-6 rounded shadow-md">
+          <h1 className="text-2xl font-bold mb-6 text-center">Alterar Senha</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium mb-1">Senha Atual</label>
-            <Input
-              type={showPasswords ? "text" : "password"}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-            />
-          </div>
+          {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
+          {success && <p className="text-green-600 mb-4 text-center">{success}</p>}
 
-          <div>
-            <label className="block font-medium mb-1">Nova Senha</label>
-            <div className="relative">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block font-medium mb-1">Senha Atual</label>
               <Input
                 type={showPasswords ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                onClick={toggleShowPasswords}
-                className="absolute right-3 top-2.5 text-gray-500"
-              >
-                {showPasswords ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
-              </button>
             </div>
-          </div>
 
-          <div>
-            <label className="block font-medium mb-1">Confirmar Nova Senha</label>
-            <Input
-              type={showPasswords ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
+            <div>
+              <label className="block font-medium mb-1">Nova Senha</label>
+              <div className="relative">
+                <Input
+                  type={showPasswords ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowPasswords}
+                  className="absolute right-3 top-2.5 text-gray-500"
+                >
+                  {showPasswords ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                </button>
+              </div>
+            </div>
 
-          <Button type="submit" className="w-full bg-[#26c9a8] text-white" disabled={isLoading}>
-            {isLoading ? "Salvando..." : "Alterar Senha"}
-          </Button>
-        </form>
+            <div>
+              <label className="block font-medium mb-1">Confirmar Nova Senha</label>
+              <Input
+                type={showPasswords ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-[#26c9a8] hover:bg-[#1fa98a] text-white font-semibold py-3 rounded-lg"
+              disabled={isLoading}
+            >
+              {isLoading ? "Salvando..." : "Alterar Senha"}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -21,24 +21,33 @@ interface Notificacao {
 }
 
 const tiposNotificacao = [
-  { value: 1, label: "Aviso de Barulho" },
-  { value: 2, label: "Solicitação de Reparo" },
+  { value: 1, label: "Aviso de barulho" },
+  { value: 2, label: "Solicitação de reparo" },
   { value: 3, label: "Sugestão" },
-  { value: 4, label: "Outro" },
-  { value: 5, label: "Comunicado Geral" }, // apenas síndico/funcionário
+  { value: 4, label: "Outros" },
 ];
 
 const statusOptions = [
   { value: "", label: "Selecione o status" },
-  { value: "1", label: "Pendente" },
+  { value: "1", label: "Enviada" },
   { value: "2", label: "Aprovada" },
   { value: "3", label: "Rejeitada" },
+  { value: "4", label: "Em andamento" },
+  { value: "5", label: "Concluída" },
+
 ];
 
 export default function NotificacoesMobile() {
   const router = useRouter();
   const { user } = useAuth();
   const isSindicoOuFuncionario = user?.nivelAcesso === 2 || user?.nivelAcesso === 3;
+  
+  const [mostrarNotificacoes, setMostrarNotificacoes] = useState(false);
+
+  const statusOptionsAbertas = statusOptions;
+  const statusOptionsRecebidas = statusOptions.filter(opt => opt.value !== "3" && opt.value !== "1");
+
+  
 
   const [abaAtiva, setAbaAtiva] = useState<"abertas" | "recebidas" | "criar">("abertas");
   const [modoCombinar, setModoCombinar] = useState(false);
@@ -74,73 +83,97 @@ export default function NotificacoesMobile() {
   const [apartamentosSugestoes, setApartamentosSugestoes] = useState<any[]>([]);
   const [loadingCriar, setLoadingCriar] = useState(false);
 
+  useEffect(() => {
+  if (!user?.usuarioId) return; // ✅ só chama se tiver ID
+
+  setMostrarNotificacoes(false);
+  setNotificacoes([]);
+  
+}, [abaAtiva, user]);
+
+
+
+
   // Buscar notificações
   const buscarNotificacoes = async (reset = true) => {
-    try {
-      setLoading(true);
-      if (reset) {
-        setPagina(1);
-        setNotificacoes([]);
-      }
+  if (!user?.usuarioId) return; // segurança extra
 
-      const queryParams: Record<string, string> = {
-        pagina: String(reset ? 1 : pagina),
-        tamanho: "30",
-      };
-
-      if (modoCombinar) {
-        if (statusFiltro) queryParams.status = statusFiltro;
-        if (tipoFiltro) queryParams.tipo = tipoFiltro;
-        if (periodoFiltro) queryParams.periodo = periodoFiltro;
-        if (periodoFiltro === "customizado") {
-          if (dataInicio) queryParams.dataInicio = dataInicio;
-          if (dataFim) queryParams.dataFim = dataFim;
-        }
-      } else {
-        if (filtroCampo && valorFiltro) {
-          queryParams[filtroCampo] = valorFiltro;
-        }
-      }
-
-      const url =
-        abaAtiva === "abertas"
-          ? `/Notificacao/MinhasNotificacoes/${user?.usuarioId}`
-          : `/Notificacao/Recebidas/${user?.usuarioId}`;
-
-     const { data } = await api.get(url, {
-  params: {
-    ...queryParams,
-    criadoPorSindico: false // ✅ filtra só notificações criadas no modo morador
-  }
-});
-
-
-      if (reset) {
-        setNotificacoes(data);
-      } else {
-        setNotificacoes((prev) => [...prev, ...data]);
-      }
-      setTemMais(data.length === 30);
-    } catch (error) {
-      console.error("Erro ao buscar notificações", error);
+  try {
+    setLoading(true);
+    setNotificacoes([]); // limpa antes do fetch
+    if (reset) {
+      setPagina(1);
       setNotificacoes([]);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const queryParams: Record<string, string> = {
+      page: String(reset ? 1 : pagina),
+      pageSize: "30",
+    };
+
+
+    if (modoCombinar) {
+      if (statusFiltro) queryParams.status = statusFiltro;
+      if (tipoFiltro) queryParams.tipo = tipoFiltro;
+      if (periodoFiltro) queryParams.periodo = periodoFiltro;
+      if (periodoFiltro === "customizado") {
+        if (dataInicio) queryParams.dataInicio = dataInicio;
+        if (dataFim) queryParams.dataFim = dataFim;
+      }
+    } else {
+      if (filtroCampo && valorFiltro) {
+        queryParams[filtroCampo] = valorFiltro;
+      }
+    }
+
+    const url =
+      abaAtiva === "abertas"
+        ? `/Notificacao/MinhasNotificacoes/${user?.usuarioId}`
+        : `/Notificacao/Recebidas/${user?.usuarioId}`;
+
+    const { data } = await api.get(url, {
+      params: {
+        ...queryParams,
+        criadoPorSindico: false, // sempre falso no modo morador
+      },
+    });
+
+    // 🔍 Se estiver na aba RECEBIDAS, filtro para remover pendentes
+    let notificacoesFiltradas = data.notificacoes;
+      if (abaAtiva === "recebidas") {
+  notificacoesFiltradas = notificacoesFiltradas.filter((n: Notificacao) => n.status !== 1 && n.status !== 3);
+}
+
+
+
+    if (reset) {
+      setNotificacoes(notificacoesFiltradas);
+    } else {
+      setNotificacoes((prev) => [...prev, ...notificacoesFiltradas]);
+    }
+
+    setTemMais(notificacoesFiltradas.length === 30);
+  } catch (error) {
+    console.error("Erro ao buscar notificações", error);
+    setNotificacoes([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Exibir todas
   const exibirTodas = () => {
-    setModoCombinar(false);
-    setFiltroCampo("status");
-    setValorFiltro("");
-    setStatusFiltro("");
-    setTipoFiltro("");
-    setPeriodoFiltro("7");
-    setDataInicio("");
-    setDataFim("");
-    buscarNotificacoes();
-  };
+  setModoCombinar(false);
+  setFiltroCampo("status");
+  setValorFiltro("");
+  setStatusFiltro("");
+  setTipoFiltro("");
+  setPeriodoFiltro("7");
+  setDataInicio("");
+  setDataFim("");
+  setMostrarNotificacoes(true); // agora ativa a listagem
+  buscarNotificacoes();
+};
 
   // Buscar apartamentos (Bloco + Número)
   const buscarApartamentos = async (bloco: string, numero: string) => {
@@ -198,12 +231,11 @@ export default function NotificacoesMobile() {
       mensagem,
       tipo: parseInt(tipo),
       moradorOrigemId: user?.usuarioId,
-      apartamentoDestinoId: apartamentoId,
-      niveisAcessoDestino: tipo !== "1" ? [2, 3] : [],
-      criadoPorSindico: false // ✅ Sempre falso nessa tela
+      apartamentoDestinoId: tipo === "1" ? apartamentoId : null, // só quando Aviso de Barulho
+      criadoPorSindico: false // ✅ sempre false para morador
     });
 
-
+    
     setMensagemSucesso("Notificação criada com sucesso!");
     setTimeout(() => setMensagemSucesso(""), 3000);
 
@@ -239,6 +271,11 @@ export default function NotificacoesMobile() {
           <BsChevronDoubleLeft size={18} /> Voltar
         </Button>
       </div>
+
+      {/* Título da Página */}
+<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Detalhes do apartamento</h1>
+
 
       {/* ABAS */}
       <div className="flex justify-between border-b border-gray-200">
@@ -297,16 +334,14 @@ export default function NotificacoesMobile() {
               <div className="flex gap-2">
                 {filtroCampo === "status" && (
                   <select
-                    value={valorFiltro}
-                    onChange={(e) => setValorFiltro(e.target.value)}
-                    className="border rounded px-2 py-2 text-sm w-full"
-                  >
-                    {statusOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+  value={valorFiltro}
+  onChange={(e) => setValorFiltro(e.target.value)}
+  className="border rounded px-2 py-2 text-sm w-full"
+>
+  {(abaAtiva === "abertas" ? statusOptionsAbertas : statusOptionsRecebidas).map(opt => (
+    <option key={opt.value} value={opt.value}>{opt.label}</option>
+  ))}
+</select>
                 )}
 
                 {filtroCampo === "tipo" && (
@@ -321,6 +356,7 @@ export default function NotificacoesMobile() {
                         {t.label}
                       </option>
                     ))}
+
                   </select>
                 )}
 
@@ -347,17 +383,17 @@ export default function NotificacoesMobile() {
             ) : (
               <div className="space-y-2">
                 <label>Status</label>
-                <select
-                  value={statusFiltro}
-                  onChange={(e) => setStatusFiltro(e.target.value)}
-                  className="w-full border rounded px-2 py-2"
-                >
-                  {statusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+<select
+  value={statusFiltro}
+  onChange={(e) => setStatusFiltro(e.target.value)}
+  className="border rounded px-2 py-2 text-sm w-full"
+>
+  {(abaAtiva === "abertas" ? statusOptionsAbertas : statusOptionsRecebidas).map(opt => (
+    <option key={opt.value} value={opt.value}>{opt.label}</option>
+  ))}
+</select>
+
+
 
                 <label>Tipo</label>
                 <select
@@ -429,25 +465,39 @@ export default function NotificacoesMobile() {
                     key={n.id}
                     className="bg-white p-4 rounded-lg border shadow-sm flex flex-col gap-2"
                   >
-                    <h2 className="font-semibold">{n.titulo}</h2>
-                    <p className="text-sm text-gray-600">{tiposNotificacao.find(t => t.value === n.tipo)?.label}</p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(n.dataCriacao).toLocaleString()}
-                    </p>
                     <div className="flex items-center gap-2">
-                      <span className={`w-3 h-3 rounded-full ${
-                        n.status === 1
-                          ? "bg-yellow-400"
-                          : n.status === 2
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}></span>
-                      {statusOptions.find(s => s.value === String(n.status))?.label}
+                      <span
+                        className={`px-3 py-1 text-sm font-semibold rounded-full text-white ${
+                          n.status === 1
+                            ? "bg-gray-400 text-black"
+                            : n.status === 2
+                            ? "bg-green-400  text-black"
+                            : n.status === 3
+                            ? "bg-red-500 text-black"
+                            : n.status === 4
+                            ? "bg-yellow-400 text-black"
+                            : "bg-green-700 text-black"
+                        }`}
+                      >
+                        {statusOptions.find(s => s.value === String(n.status))?.label}
+                      </span>
                     </div>
+
+                    <h2 className="font-semibold uppercase">{n.titulo}</h2>
+                    <p className="text-sm text-gray-600">Assunto: {tiposNotificacao.find(t => t.value === n.tipo)?.label}</p>
+                    <p className="text-sm text-gray-500">
+                      <strong>Data:</strong>{" "}
+                      {new Date(n.dataCriacao).toLocaleDateString("pt-BR")}{" "}
+                      <strong>Hora:</strong>{" "}
+                      {new Date(n.dataCriacao).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </p>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/notifications/details/${n.id}`)}
+                      onClick={() => router.push(`/notification/user/details/${n.id}`)}
                       className="w-fit text-xs"
                     >
                       Ver detalhes
@@ -488,13 +538,12 @@ export default function NotificacoesMobile() {
               className="border rounded px-2 py-2 text-sm w-full"
             >
               <option value="">Selecione o tipo</option>
-              {tiposNotificacao.map((t) =>
-                t.value === 5 && !isSindicoOuFuncionario ? null : (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                )
-              )}
+              {tiposNotificacao.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+
             </select>
 
             {tipo === "1" && (
@@ -541,6 +590,7 @@ export default function NotificacoesMobile() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

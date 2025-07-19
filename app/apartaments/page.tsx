@@ -5,22 +5,21 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import LoadingScreen from "@/services/loadingScreen";
 
-export default function AccessLogRedirect() {
+export default function ApartamentsRedirect() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push("/login");
+        router.push("/apartaments");
       } else if ([1, 3].includes(user.nivelAcesso)) {
-        router.push("/home/desktop");
+        router.push("/apartaments/desktop");
       } else {
-        router.push("/home/mobile");
+        router.push("/apartaments/mobile");
       }
     }
   }, [user, loading, router]);
 
-  return <LoadingScreen message="Carregando, por favor aguarde..." />;
+      return <LoadingScreen message="Carregando, por favor aguarde..." />;
 }
-

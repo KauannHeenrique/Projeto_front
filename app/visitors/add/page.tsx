@@ -63,7 +63,7 @@ export default function AddVisitor() {
 
       await api.post("Visitante/CadastrarVisitante", body);
       setMensagem("Visitante cadastrado com sucesso!");
-      setTimeout(() => router.push("/usuarios"), 2000);
+      setTimeout(() => router.push("/users"), 2000);
     } catch (err: any) {
       const msg = err?.response?.data?.mensagem || "Erro ao cadastrar visitante.";
       setMensagem(msg);
@@ -78,7 +78,7 @@ export default function AddVisitor() {
       <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex justify-between items-center shadow-sm">
         <Button
           type="button"
-          onClick={() => router.push("/usuarios")}
+          onClick={() => router.push("/users")}
           variant="ghost"
           className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
         >
@@ -88,7 +88,7 @@ export default function AddVisitor() {
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            onClick={() => router.push("/usuarios/adicionar")}
+            onClick={() => router.push("/users/mobile/adicionar")}
             variant="outline"
             className="text-sm"
           >
@@ -131,9 +131,15 @@ export default function AddVisitor() {
 <Input
   placeholder="000.000.000-00"
   value={documento}
-  onChange={(e) => setDocumento(formatCPF(e.target.value))}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove não numéricos
+    setDocumento(formatCPF(onlyNumbers));
+  }}
   disabled={isLoading}
+  inputMode="numeric" // Teclado numérico no mobile
+  pattern="[0-9]*"    // Aceita apenas números
 />
+
             </div>
           </div>
 
@@ -144,9 +150,15 @@ export default function AddVisitor() {
     <Input
   placeholder="(99) 99999-9999"
   value={telefone}
-  onChange={(e) => setTelefone(formatPhone(e.target.value))}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
+    setTelefone(formatPhone(onlyNumbers));
+  }}
   disabled={isLoading}
+  inputMode="numeric" // Mostra teclado numérico no mobile
+  pattern="[0-9]*"    // Aceita apenas números
 />
+
 
   </div>
 

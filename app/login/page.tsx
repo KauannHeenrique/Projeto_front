@@ -97,8 +97,11 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="pl-10 h-12 rounded-full border-gray-200 w-full border bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#26c9a8]"
                 placeholder="CPF"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 required
               />
+
             </div>
 
             <div className="relative">

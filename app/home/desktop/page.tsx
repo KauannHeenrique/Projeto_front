@@ -120,7 +120,7 @@ export default function Home() {
         {/* Ações rápidas */}
         <div className="grid grid-cols-3 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow">
-            <Link href="/usuarios/desktop">
+            <Link href="/users/desktop">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-blue-100 p-3">

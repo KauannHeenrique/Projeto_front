@@ -78,7 +78,7 @@ export default function AddVisitor() {
       <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex justify-between items-center shadow-sm">
         <Button
           type="button"
-          onClick={() => router.push("/users")}
+          onClick={() => router.push("/users/desktop/adicionar")}
           variant="ghost"
           className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
         >
@@ -86,22 +86,15 @@ export default function AddVisitor() {
           Voltar
         </Button>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            onClick={() => router.push("/users/mobile/adicionar")}
-            variant="outline"
-            className="text-sm"
-          >
-            Alterar tipo de cadastro
-          </Button>
+          
           <Button
             type="submit"
             form="visitorForm"
             disabled={isLoading}
-            className="bg-indigo-700 hover:bg-indigo-800 text-white flex items-center gap-2 text-sm"
+            className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2 text-sm"
           >
             <FiSave size={16} />
-            {isLoading ? "Salvando..." : "Salvar"}
+            {isLoading ? "Salvando..." : "Cadastrar"}
           </Button>
         </div>
       </div>
@@ -127,7 +120,7 @@ export default function AddVisitor() {
 />
             </div>
             <div className="w-full">
-              <label className="block text-sm font-medium mb-1">Documento (CPF/RG)</label>
+              <label className="block text-sm font-medium mb-1">Documento (CPF)</label>
 <Input
   placeholder="000.000.000-00"
   value={documento}
@@ -137,7 +130,7 @@ export default function AddVisitor() {
   }}
   disabled={isLoading}
   inputMode="numeric" // Teclado numérico no mobile
-  pattern="[0-9]*"    // Aceita apenas números
+ 
 />
 
             </div>
@@ -156,7 +149,7 @@ export default function AddVisitor() {
   }}
   disabled={isLoading}
   inputMode="numeric" // Mostra teclado numérico no mobile
-  pattern="[0-9]*"    // Aceita apenas números
+
 />
 
 
@@ -187,7 +180,7 @@ export default function AddVisitor() {
               <div>
                 <label className="block text-sm font-medium mb-1">Nome da empresa</label>
 <Input
-  placeholder="Nome da empresa prestadora"
+  placeholder="Nome da empresa"
   value={empresa}
   onChange={(e) => setEmpresa(e.target.value)}
   disabled={isLoading}

@@ -198,7 +198,7 @@ useEffect(() => {
             Olá, {user?.nome?.split(" ")[0]}!
           </h1>
           <p className="text-sm text-gray-600">
-            {isMorador ? "Morador" : "Síndico"} — Bloco {user?.bloco || "-"}, Ap. {user?.apartamento || "-"}
+            {isMorador ? "Morador" : "Síndico"} — Bloco {user?.bloco || "-"}, Apartamento {user?.apartamento || "-"}
           </p>
         </div>
 

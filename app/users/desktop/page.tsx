@@ -100,10 +100,13 @@ const buscarTodosUsuarios = async () => {
   setbuscouUsuario(false);
 
   try {
-    // Realiza a chamada à API para buscar todos os usuários
     const { data } = await api.get(`/Usuario/ExibirTodosUsuarios`);
 
-    const mappedUsers: User[] = data.map((user: any) => ({
+    const usuariosFiltrados = data.filter(
+      (user: any) => user.nivelAcesso !== 1
+    );
+
+    const mappedUsers: User[] = usuariosFiltrados.map((user: any) => ({
       id: user.usuarioId,
       nome: user.nome || "Nome não informado",
       email: user.email || "Email não informado",
@@ -132,6 +135,7 @@ const buscarTodosUsuarios = async () => {
   }
 };
 
+
 const buscarTodosVisitantes = async () => {
   setMensagemErroVisitante(""); // Limpar a mensagem de erro
   setVisitantes([]); // Limpar os visitantes antes de uma nova busca
@@ -148,7 +152,7 @@ const buscarTodosVisitantes = async () => {
       } else {
         // Atualizando o estado corretamente
         const mappedVisitantes: Visitante[] = data.map((visitante: any) => ({
-          id: visitante.id,
+          id: visitante.visitanteId,
           nome: visitante.nome || "Nome não informado",
           documento: visitante.documento || "Não informado",
           telefone: visitante.telefone || "Telefone não informado",
@@ -227,7 +231,6 @@ const buscarTodosVisitantes = async () => {
   const algumFiltroPreenchido = filtrosCompletos.some(filtro => filtro.trim() !== "");
 
   if (!algumFiltroPreenchido) {
-    console.log("Não preencher nada ne porra")
     setMensagemErroUsuario("Por favor, preencha ao menos um campo do filtro.");
     return;
   }
@@ -277,6 +280,11 @@ const buscarTodosVisitantes = async () => {
 
     // Realiza a chamada à API com os filtros aplicados
     const { data } = await api.get(`/Usuario/BuscarUsuarioPor?${query}`);
+
+    // Remove o Administrador antes de mapear
+     const usuariosFiltrados = data.filter(
+      (user: any) => user.nivelAcesso !== 1
+    );
 
     const mappedUsers: User[] = data.map((user: any) => ({
       id: user.usuarioId,
@@ -583,8 +591,8 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
             <Button
     type="button"
-    onClick={() => router.push("/usuarios/desktop/adicionar")}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm rounded font-semibold"
+    onClick={() => router.push("/users/desktop/adicionar")}
+              className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 text-sm rounded font-semibold"
   >
     <FiUserPlus size={16} /> Adicionar usuário
   </Button>
@@ -878,7 +886,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
                       <tr
                         key={`${user.id}-${index}`}
                         className="border-b hover:bg-gray-50 transition cursor-pointer"
-                        onClick={() => router.push(`/usuarios/${user.id}`)}
+                        onClick={() => router.push(`/users/${user.id}`)}
                       >
                         <td className="px-4 py-3 text-left font-bold capitalize">{user.nome}</td>
                         <td className="px-4 py-3">{user.bloco}</td>
@@ -899,7 +907,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   </td>
 
                         <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <Button size="sm" variant="outline" onClick={() => router.push(`/usuarios/${user.id}/editar`)}>
+                          <Button size="sm" variant="outline" onClick={() => router.push(`/users/desktop/${user.id}/editar`)}>
                             Ver detalhes
                           </Button>
                         </td>
@@ -1123,7 +1131,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
               )}
             </td>
             <td className="px-4 py-3 text-center">
-              <Button size="sm" variant="outline" onClick={() => router.push(`/visitantes/${v.id}/editar`)}>
+              <Button size="sm" variant="outline" onClick={() => router.push(`/visitors/desktop/${v.id}/editar`)}>
                 Ver detalhes
               </Button>
             </td>

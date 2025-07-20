@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter, useParams } from "next/navigation";
-import { FiSearch, FiSave, FiRefreshCw, FiTrash2 } from "react-icons/fi";
+import { FiSearch, FiSave, FiRefreshCw, FiTrash2, FiAlertTriangle } from "react-icons/fi";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { formatCPF, formatPhone, cleanDocument } from "@/services/formatValues";
 import api from "@/services/api";
@@ -70,7 +70,7 @@ export default function EditUser() {
 
   useEffect(() => {
   const fetchUser = async () => {
-    setIsLoading(true);
+    //setIsLoading(true);
     try {
   const { data } = await api.get("/Usuario/BuscarUsuarioPor", {
     params: { id }
@@ -223,7 +223,7 @@ telefone: cleanDocument(formData.phone),
   const { data } = await api.put(`/Usuario/AtualizarUsuario/${id}`, usuario);
 
   setApiError("Usuário atualizado com sucesso!");
-  setTimeout(() => router.push("/usuarios"), 2000);
+  setTimeout(() => router.push("/users"), 2000);
 } catch (err: any) {
   const msg = err?.response?.data?.mensagem || "Erro ao atualizar usuário.";
   console.error("Erro ao atualizar usuário:", msg);
@@ -233,6 +233,8 @@ telefone: cleanDocument(formData.phone),
 }
 
 };
+// POP UP para remover usuário
+const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
 
   return (
   <div className="min-h-screen bg-gray-50">
@@ -241,7 +243,7 @@ telefone: cleanDocument(formData.phone),
       {/* Botão Voltar - à esquerda */}
       <Button
         type="button"
-        onClick={() => router.push("/usuarios")}
+        onClick={() => router.push("/users")}
         disabled={isLoading}
         variant="ghost"
         className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
@@ -263,35 +265,75 @@ telefone: cleanDocument(formData.phone),
           <FiRefreshCw size={16} />
           Redefinir Senha
         </Button>
-         <Button
-  type="button"
-  onClick={async () => {
-    if (confirm("Tem certeza que deseja excluir este usuário?")) {
-      try {
-  await api.delete(`/Usuario/ExcluirUsuario/${id}`);
-  setApiError("Usuário excluído com sucesso.");
-  setTimeout(() => router.push("/usuarios"), 900);
-} catch (err: any) {
-  const msg = err?.response?.data?.mensagem || "Erro ao excluir o usuário.";
-  console.error("Erro ao excluir:", msg);
-  setApiError(msg);
-}
 
-    }
-  }}
-  disabled={isLoading}
-  variant="ghost"
-  className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1"
->
-  <FiTrash2 size={16} />
-  Remover usuário
-</Button>
+        {mostrarPopupExcluir && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+      {/* Botão fechar */}
+      <button
+        onClick={() => setMostrarPopupExcluir(false)}
+        className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+      >
+        ×
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center justify-center gap-2">
+      <FiAlertTriangle size={20} className="text-red-600" />
+      Confirmar exclusão
+      <FiAlertTriangle size={20} className="text-red-600" />
+      </h2>
+
+      <p className="text-sm text-center text-gray-700 mb-6">
+        Tem certeza que deseja excluir este usuário? Essa ação não pode ser desfeita.
+      </p>
+
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => setMostrarPopupExcluir(false)}
+          className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded"
+        >
+          Cancelar
+        </Button>
+        <Button
+          onClick={async () => {
+            try {
+              await api.delete(`/Usuario/ExcluirUsuario/${id}`);
+              setApiError("Usuário excluído com sucesso.");
+              setMostrarPopupExcluir(false);
+              setTimeout(() => router.push("/users/desktop"), 900);
+            } catch (err: any) {
+              const msg = err?.response?.data?.mensagem || "Erro ao excluir o usuário.";
+              console.error("Erro ao excluir:", msg);
+              setApiError(msg);
+            }
+          }}
+          className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded"
+        >
+          Confirmar
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+        <Button
+        type="button"
+        onClick={() => setMostrarPopupExcluir(true)}
+        disabled={isLoading}
+        variant="ghost"
+        className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1"
+        >
+        <FiTrash2 size={16} />
+        Remover usuário
+        </Button>
+
         <Button
           type="submit"
           form="editUserForm"
           disabled={isLoading}
           variant="ghost"
-          className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+          className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
         >
           <FiSave size={16} />
           {isLoading ? "Salvando..." : "Salvar"}
@@ -354,7 +396,7 @@ telefone: cleanDocument(formData.phone),
       {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
     </div>
     <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
+      <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF)</label>
       <Input
         id="document"
         name="document"

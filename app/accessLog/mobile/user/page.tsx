@@ -12,7 +12,7 @@ import api from "@/services/api";
 interface Acesso {
   id: number;
   dataHoraEntrada: string;
-  nome: string;
+  nome?: string;
   bloco: string;
   apartamento: number;
   entradaPor: number; // 1 = Morador, 2 = Visitante
@@ -70,27 +70,39 @@ export default function UserAccessLog() {
   };
 
   // Função para buscar visitantes
-  const fetchAcessosVisitantes = async () => {
-    if (!usuarioId) return;
-    try {
-      setLoading(true);
-      setMensagemErro("");
+const fetchAcessosVisitantes = async () => {
+  if (!apartamentoId) return;
 
-      const url = `/AcessoEntradaVisitante/ListarEntradasPorApartamentoDoUsuario?usuarioId=${usuarioId}`;
-      const { data } = await api.get(url);
-      setAcessosVisitantes(data);
+  try {
+    setLoading(true);
+    setMensagemErro("");
 
-      if (data.length > 0) {
-        setBloco(data[0].bloco || "-");
-        setApartamento(data[0].apartamento || "-");
-      }
-    } catch (err) {
-      console.error("Erro ao buscar acessos visitantes:", err);
-      setAcessosVisitantes([]);
-    } finally {
-      setLoading(false);
+    // Monta os parâmetros
+    const queryParams: string[] = [`apartamentoId=${encodeURIComponent(apartamentoId)}`];
+
+    if (dataInicio) queryParams.push(`dataInicio=${encodeURIComponent(dataInicio)}`);
+    if (dataFim) queryParams.push(`dataFim=${encodeURIComponent(dataFim)}`);
+
+    const url = `/AcessoEntradaVisitante/FiltrarEntradasPorApartamento?${queryParams.join("&")}`;
+
+    const { data } = await api.get(url);
+    setAcessosVisitantes(data);
+
+    if (data.length > 0) {
+      setBloco(data[0].bloco || "-");
+      setApartamento(data[0].apartamento || "-");
+    } else {
+      setMensagemErro("Nenhuma entrada encontrada para os filtros aplicados.");
     }
-  };
+  } catch (err) {
+    console.error("Erro ao buscar acessos visitantes:", err);
+    setMensagemErro("Erro ao buscar entradas de visitantes.");
+    setAcessosVisitantes([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Ação do botão buscar com validação
   const handleBuscar = () => {
@@ -234,7 +246,7 @@ export default function UserAccessLog() {
                   className="bg-white p-4 rounded-lg border shadow-sm flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-medium">{a.nome}</p>
+                    <p className="font-medium">{a.nome || a.nomeVisitante || a.nomeMorador}</p>
                     <p className="text-sm text-gray-500">
                       {a.bloco}-{a.apartamento} |{" "}
                       {new Date(a.dataHoraEntrada).toLocaleString()}
@@ -263,7 +275,7 @@ export default function UserAccessLog() {
                 className="bg-white p-4 rounded-lg border shadow-sm flex justify-between items-center"
               >
                 <div>
-                  <p className="font-medium">{a.nome}</p>
+                  <p className="font-medium">{a.nome || a.nomeVisitante || a.nomeMorador}</p>
                   <p className="text-sm text-gray-500">
                     {a.bloco}-{a.apartamento} |{" "}
                     {new Date(a.dataHoraEntrada).toLocaleString()}

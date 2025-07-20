@@ -54,7 +54,7 @@
 
     useEffect(() => {
     if (tipoCadastro === "visitante") {
-      router.push("/visitors/add");
+      router.push("/visitors/desktop/add");
     }
   }, [tipoCadastro, router]);
 
@@ -161,6 +161,11 @@
         if (!formData.apartmentId.trim()) newErrors.apartmentId = "O apartamento é obrigatório.";
         else if (isNaN(apartmentIdNum) || apartmentIdNum <= 0) newErrors.apartmentId = "ID inválido.";
       }
+      
+      // ✅ Adicionar validação para RFID obrigatório
+      if (formData.codigoRFID.trim()) {
+      newErrors.codigoRFID = "Cadastre uma TAG para o usuário.";
+      }
 
       if (formData.codigoRFID && !/^[a-zA-Z0-9]{8}$/.test(formData.codigoRFID))
         newErrors.codigoRFID = "O código RFID deve ter 8 caracteres alfanuméricos.";
@@ -235,9 +240,9 @@
     console.log("Resposta da API (cadastro):", data);
 
     setApiError("Morador cadastrado com sucesso!");
-    setTimeout(() => router.push("/usuarios"), 2000);
+    setTimeout(() => router.push("/users"), 2000);
   } catch (err: any) {
-    const msg = err?.response?.data?.mensagem || "Erro ao cadastrar morador.";
+    const msg = err?.response?.data?.mensagem || "Erro ao cadastrar usuário.";
     setApiError(msg);
     console.error("Erro ao cadastrar morador:", msg);
   } finally {
@@ -255,7 +260,7 @@
       <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex items-center shadow-sm">
         <Button
           type="button"
-          onClick={() => router.push("/usuarios/desktop")}
+          onClick={() => router.push("/users/desktop")}
           variant="ghost"
           className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
         >
@@ -277,14 +282,14 @@
             onClick={() => setTipoCadastro("morador")}
             className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
           >
-            <FiUser size={32} className="text-indigo-600" />
+            <FiUser size={32} className="text-[#26c9a8]" />
             <span className="font-semibold text-gray-700">Morador</span>
           </button>
           <button
             onClick={() => setTipoCadastro("visitante")}
             className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
           >
-            <FiUsers size={32} className="text-indigo-600" />
+            <FiUsers size={32} className="text-[#26c9a8]" />
             <span className="font-semibold text-gray-700">Visitante</span>
           </button>
         </div>
@@ -299,7 +304,7 @@
           <div className="sticky top-0 z-20 bg-white border-b px-4 sm:px-6 md:px-8 py-2 flex justify-between items-center shadow-sm">
             <Button
               type="button"
-              onClick={() => router.push("/usuarios")}
+                    onClick={() => setTipoCadastro("")}
               disabled={isLoading}
               variant="ghost"
               className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
@@ -308,22 +313,15 @@
               Voltar
             </Button>
             <div className="flex items-center gap-2">
-    <Button
-      type="button"
-      onClick={() => setTipoCadastro("")}
-      variant="outline"
-      className="text-sm"
-    >
-      Alterar tipo de cadastro
-    </Button>
+
     <Button
       type="submit"
       form="addUserForm"
       disabled={isLoading}
-      className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+      className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
     >
       <FiSave size={16} />
-      {isLoading ? "Salvando..." : "Salvar"}
+      {isLoading ? "Salvando..." : "Adicionar"}
     </Button>
   </div>
 
@@ -378,7 +376,7 @@
                   />
                 </div>
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF/RG)</label>
+                  <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF)</label>
                   <Input
                     id="document"
                     name="document"

@@ -149,17 +149,17 @@ setBuscou(true); // Aqui!
               : "",
         }
       : {
-          [tipoFiltro]:
-            tipoFiltro === "status"
-              ? valorFiltro === "ativo"
-                ? "true"
-                : valorFiltro === "inativo"
-                ? "false"
-                : ""
-              : tipoFiltro === "documento"
-              ? valorFiltro.replace(/\D/g, "")
-              : valorFiltro,
-        };
+  [tipoFiltro === "nivel" ? "nivelAcesso" : tipoFiltro]:
+    tipoFiltro === "status"
+      ? valorFiltro === "ativo"
+        ? "true"
+        : valorFiltro === "inativo"
+        ? "false"
+        : ""
+      : tipoFiltro === "documento"
+      ? valorFiltro.replace(/\D/g, "")
+      : valorFiltro,
+};
 
     const filtrosLimpos = Object.fromEntries(
       Object.entries(filtros).filter(([_, v]) => v !== "" && v !== undefined)
@@ -257,25 +257,44 @@ setBuscou(true); // Aqui!
 
         <div className="bg-white px-4 py-4 border-b shadow-sm space-y-4 rounded-b-md">
           <div className="flex items-center justify-between">
-            <select
-  value={tipoFiltro}
-  onChange={(e) => {
-    setTipoFiltro(e.target.value);
-    setValorFiltro("");       // limpa o valor do filtro
-    setUsuarios([]);          // limpa os resultados da tela
-    setBuscou(false);         // desativa o estado de "buscou"
-    setmensagemErroUsuario("");      // limpa erro se tiver
-  }}
-  className="text-sm border rounded px-2 py-1 w-1/2"
->
+            {abaAtiva === "usuarios" ? (
+  <select
+    value={tipoFiltro}
+    onChange={(e) => {
+      setTipoFiltro(e.target.value);
+      setValorFiltro("");
+      setUsuarios([]);
+      setBuscou(false);
+      setmensagemErroUsuario("");
+    }}
+    className="text-sm border rounded px-2 py-1 w-1/2"
+  >
+    <option value="nome">Nome</option>
+    <option value="documento">Documento</option>
+    <option value="bloco">Bloco</option>
+    <option value="apartamento">Apartamento</option>
+    <option value="nivel">Nível de acesso</option>
+    <option value="status">Status</option>
+  </select>
+) : (
+  <select
+    value={tipoFiltroVisitante}
+    onChange={(e) => {
+      setTipoFiltroVisitante(e.target.value);
+      setValorFiltroVisitante("");
+      setVisitantes([]);
+      setBuscouVisitante(false);
+      setMensagemErroVisitante("");
+    }}
+    className="text-sm border rounded px-2 py-1 w-1/2"
+  >
+    <option value="nome">Nome</option>
+    <option value="documento">Documento</option>
+    <option value="status">Status</option>
+    <option value="prestadorServico">Prestador de Serviço</option>
+  </select>
+)}
 
-              <option value="nome">Nome</option>
-              <option value="documento">Documento</option>
-              <option value="bloco">Bloco</option>
-              <option value="apartamento">Apartamento</option>
-              <option value="nivel">Nível de acesso</option>
-              <option value="status">Status</option>
-            </select>
 
             <Button
               type="button"
@@ -289,72 +308,135 @@ setBuscou(true); // Aqui!
           </div>
 
           {!modoCombinar ? (
-            <div className="flex gap-2">
-              {tipoFiltro === "nome" || tipoFiltro === "bloco" || tipoFiltro === "apartamento" ? (
-                <Input
-                  placeholder={tipoFiltro.charAt(0).toUpperCase() + tipoFiltro.slice(1)}
-                  value={valorFiltro}
-                  onChange={(e) => setValorFiltro(e.target.value)}
-                />
-              ) : tipoFiltro === "documento" ? (
-                <Input
-                  placeholder="CPF"
-                  value={formatCPF(valorFiltro)}
-                  onChange={(e) => setValorFiltro(e.target.value)}
-                />
-              ) : tipoFiltro === "nivel" ? (
-                <select
-                  value={valorFiltro}
-                  onChange={(e) => setValorFiltro(e.target.value)}
-                  className="text-sm border rounded px-2 py-1 w-full"
-                >
-                  <option value="">Todos</option>
-                  <option value="2">Síndico</option>
-                  <option value="3">Funcionário</option>
-                  <option value="4">Morador</option>
-                </select>
-              ) : tipoFiltro === "status" && (
-                <select
-                  value={valorFiltro}
-                  onChange={(e) => setValorFiltro(e.target.value)}
-                  className="text-sm border rounded px-2 py-1 w-full"
-                >
-                  <option value="">Todos</option>
-                  <option value="ativo">Ativo</option>
-                  <option value="inativo">Inativo</option>
-                </select>
-              )}
-              <Button onClick={buscarUsuarios}>
-    <FaSearch size={14} />
-  </Button>
-
-
-
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Input placeholder="Nome" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} />
-              <Input placeholder="CPF" value={formatCPF(filtroDocumento)} onChange={(e) => setFiltroDocumento(e.target.value)} />
-              <Input placeholder="Bloco" value={filtroBloco} onChange={(e) => setFiltroBloco(e.target.value)} />
-              <Input placeholder="Apartamento" value={filtroApto} onChange={(e) => setFiltroApto(e.target.value)} />
-              <select value={filtroNivel} onChange={(e) => setFiltroNivel(e.target.value)} className="w-full text-sm border rounded px-2 py-2">
-                <option value="">Todos os níveis</option>
-                <option value="2">Síndico</option>
-                <option value="3">Funcionário</option>
-                <option value="4">Morador</option>
-              </select>
-              <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} className="w-full text-sm border rounded px-2 py-2">
-                <option value="">Todos os status</option>
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
-              </select>
-              <Button onClick={buscarUsuarios}>
-    <FaSearch size={14} />
-  </Button>
-
-
-            </div>
-          )}
+  abaAtiva === "usuarios" ? (
+    // FILTRO PARA USUÁRIOS
+    <div className="flex gap-2">
+      {tipoFiltro === "nome" || tipoFiltro === "bloco" || tipoFiltro === "apartamento" ? (
+        <Input
+          placeholder={tipoFiltro.charAt(0).toUpperCase() + tipoFiltro.slice(1)}
+          value={valorFiltro}
+          onChange={(e) => setValorFiltro(e.target.value)}
+        />
+      ) : tipoFiltro === "documento" ? (
+        <Input
+          placeholder="CPF"
+          value={formatCPF(valorFiltro)}
+          onChange={(e) => setValorFiltro(e.target.value)}
+        />
+      ) : tipoFiltro === "nivel" ? (
+        <select
+          value={valorFiltro}
+          onChange={(e) => setValorFiltro(e.target.value)}
+          className="text-sm border rounded px-2 py-1 w-full"
+        >
+          <option value="">Selecione o nível</option>
+          <option value="2">Síndico</option>
+          <option value="3">Funcionário</option>
+          <option value="4">Morador</option>
+        </select>
+      ) : tipoFiltro === "status" && (
+        <select
+          value={valorFiltro}
+          onChange={(e) => setValorFiltro(e.target.value)}
+          className="text-sm border rounded px-2 py-1 w-full"
+        >
+          <option value="">Selecione o status</option>
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      )}
+      <Button onClick={buscarUsuarios}>
+        <FaSearch size={14} />
+      </Button>
+    </div>
+  ) : (
+    // FILTRO PARA VISITANTES
+    <div className="flex gap-2">
+      {tipoFiltroVisitante === "nome" || tipoFiltroVisitante === "documento" ? (
+        <Input
+          placeholder={tipoFiltroVisitante === "nome" ? "Nome" : "Documento"}
+          value={valorFiltroVisitante}
+          onChange={(e) => setValorFiltroVisitante(e.target.value)}
+        />
+      ) : tipoFiltroVisitante === "status" ? (
+        <select
+          value={valorFiltroVisitante}
+          onChange={(e) => setValorFiltroVisitante(e.target.value)}
+          className="text-sm border rounded px-2 py-1 w-full"
+        >
+          <option value="">Selecione a opção</option>
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      ) : (
+        <select
+          value={valorFiltroVisitante}
+          onChange={(e) => setValorFiltroVisitante(e.target.value)}
+          className="text-sm border rounded px-2 py-1 w-full"
+        >
+          <option value="">Selecione a opção</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </select>
+      )}
+      <Button onClick={() => {/* Criar função buscarVisitantes */}}>
+        <FaSearch size={14} />
+      </Button>
+    </div>
+  )
+) : (
+  abaAtiva === "usuarios" ? (
+    // 🔹 COMBINADO PARA USUÁRIOS
+    <div className="space-y-2">
+      <Input placeholder="Nome" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} />
+      <Input placeholder="CPF" value={formatCPF(filtroDocumento)} onChange={(e) => setFiltroDocumento(e.target.value)} />
+      <Input placeholder="Bloco" value={filtroBloco} onChange={(e) => setFiltroBloco(e.target.value)} />
+      <Input placeholder="Apartamento" value={filtroApto} onChange={(e) => setFiltroApto(e.target.value)} />
+      <select value={filtroNivel} onChange={(e) => setFiltroNivel(e.target.value)} className="w-full text-sm border rounded px-2 py-2">
+        <option value="">Selecione o nível</option>
+        <option value="2">Síndico</option>
+        <option value="3">Funcionário</option>
+        <option value="4">Morador</option>
+      </select>
+      <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} className="w-full text-sm border rounded px-2 py-2">
+        <option value="">Selecione o status</option>
+        <option value="ativo">Ativo</option>
+        <option value="inativo">Inativo</option>
+      </select>
+      <Button onClick={buscarUsuarios}>
+        <FaSearch size={14} />
+      </Button>
+    </div>
+  ) : (
+    // 🔹 COMBINADO PARA VISITANTES
+    <div className="space-y-2">
+      <Input placeholder="Nome" value={filtroNomeVisitante} onChange={(e) => setFiltroNomeVisitante(e.target.value)} />
+      <Input placeholder="Documento" value={formatCPF(filtroDocumentoVisitante)} onChange={(e) => setFiltroDocumentoVisitante(e.target.value)} />
+      <select
+        value={filtroStatusVisitante}
+        onChange={(e) => setFiltroStatusVisitante(e.target.value)}
+        className="w-full text-sm border rounded px-2 py-2"
+      >
+        <option value="">Selecione o status</option>
+        <option value="ativo">Ativo</option>
+        <option value="inativo">Inativo</option>
+      </select>
+      <select
+        value={filtroPrestadorVisitante}
+        onChange={(e) => setFiltroPrestadorVisitante(e.target.value)}
+        className="w-full text-sm border rounded px-2 py-2"
+      >
+        <option value="">Prestador de Serviço?</option>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+      </select>
+      <Button onClick={() => {/* Criar função buscarVisitantesCombinado */}}>
+        <FaSearch size={14} />
+      </Button>
+    </div>
+  )
+)
+  }
 
           {/* Botão Exibir Todas */}
         <Button

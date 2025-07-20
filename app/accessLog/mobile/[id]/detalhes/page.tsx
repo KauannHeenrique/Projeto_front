@@ -107,13 +107,16 @@ export default function DetalhesAcessoPage() {
       </div>
       <div>
         <h2 className="text-xl font-semibold">{detalhes.nome}</h2>
-        <p className="text-gray-500 text-sm">
-  Documento: {
-    detalhes.documento.replace(/\D/g, "").length === 11
+        <p className="text-gray-500 text-sm flex flex-wrap gap-1">
+  <span>Documento:</span>
+  <span className="break-all">
+    {detalhes.documento.replace(/\D/g, "").length === 11
       ? formatCPF(detalhes.documento)
-      : formatCNPJ(detalhes.documento)
-  }
+      : formatCNPJ(detalhes.documento)}
+  </span>
 </p>
+
+
 
       </div>
     </div>

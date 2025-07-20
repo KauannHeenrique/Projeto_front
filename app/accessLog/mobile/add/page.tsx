@@ -28,6 +28,10 @@ export default function AddManualEntry() {
   const [observacao, setObservacao] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  
+  const [bloco, setBloco] = useState("");
+const [apartamento, setApartamento] = useState("");
+const [cpfMorador, setCpfMorador] = useState("");
 
   // Função para formatar documento dinamicamente
   const handleDocumentoChange = (value: string) => {
@@ -122,13 +126,18 @@ export default function AddManualEntry() {
     if (!visitante || !user) return;
 
     const body = {
-      visitanteId: visitante.visitanteId,
-      observacao,
-      registradoPor,
-    };
+    visitanteId: visitante.visitanteId,
+    bloco,
+    apartamento,
+    cpfMorador: cleanDocument(cpfMorador), // Remove máscara antes de enviar
+    observacao,
+    registradoPor,
+  };
+
+  console.log("✅ Dados enviados para API:", body); // <-- DEBUG
 
     try {
-      await api.post("/AcessoEntradaVisitante/RegistrarEntradaManual", body);
+      await api.post("/AcessoEntradaVisitante/RegistrarEntradaVisitante", body);
       setMensagem("Entrada registrada com sucesso!");
       setTimeout(() => router.push("/accessLog"), 2000);
     } catch (error: any) {
@@ -180,25 +189,7 @@ export default function AddManualEntry() {
             </Button>
           )}
 
-          {tipo === "morador" && morador && (
-            <Button
-              onClick={salvarEntradaMorador}
-              className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2"
-            >
-              <FiSave size={16} />
-              Salvar
-            </Button>
-          )}
-
-          {tipo === "visitante" && visitante && (
-            <Button
-              onClick={salvarEntradaVisitante}
-              className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2"
-            >
-              <FiSave size={16} />
-              Salvar
-            </Button>
-          )}
+          
         </div>
       </div>
 
@@ -258,8 +249,17 @@ export default function AddManualEntry() {
             </div>
 
             {mensagem && (
-              <div className="text-sm text-red-600 font-medium">{mensagem}</div>
-            )}
+  <div
+    className={`text-sm font-medium ${
+      mensagem.toLowerCase().includes("sucesso")
+        ? "text-green-600"
+        : "text-red-600"
+    }`}
+  >
+    {mensagem}
+  </div>
+)}
+
 
             {morador && (
               <div className="bg-white border rounded p-4 space-y-4 shadow-sm">
@@ -307,6 +307,16 @@ export default function AddManualEntry() {
                 />
               </div>
             )}
+
+            {tipo === "morador" && morador && (
+            <Button
+              onClick={salvarEntradaMorador}
+              className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2"
+            >
+              <FiSave size={16} />
+              Registrar
+            </Button>
+          )}
           </div>
         )}
 
@@ -336,8 +346,16 @@ export default function AddManualEntry() {
             </div>
 
             {mensagem && (
-              <div className="text-sm text-red-600 font-medium">{mensagem}</div>
-            )}
+  <div
+    className={`text-sm font-medium ${
+      mensagem.toLowerCase().includes("sucesso")
+        ? "text-green-600"
+        : "text-red-600"
+    }`}
+  >
+    {mensagem}
+  </div>
+)}
 
             {/* Lista de visitantes (CNPJ) */}
             {listaVisitantes.length > 0 && (
@@ -404,39 +422,84 @@ export default function AddManualEntry() {
 
             {/* Visitante selecionado */}
             {visitante && (
-              <>
-                <div className="bg-white border rounded p-4 space-y-4 shadow-sm mt-4">
-                  <p>
-                    <strong>Nome:</strong> {visitante.nome}
-                  </p>
-                  <p>
-                    <strong>Documento:</strong>{" "}
-                    {visitante.documento.replace(/\D/g, "").length > 11
-                      ? formatCNPJ(visitante.documento)
-                      : formatCPF(visitante.documento)}
-                  </p>
-                  <p>
-                    <strong>Telefone:</strong> {formatPhone(visitante.telefone)}
-                  </p>
-                  {visitante.nomeEmpresa && (
-                    <p>
-                      <strong>Empresa:</strong> {visitante.nomeEmpresa}
-                    </p>
-                  )}
-                </div>
+  <>
+    <div className="bg-white border rounded p-4 space-y-4 shadow-sm mt-4">
+      <p>
+        <strong>Nome:</strong> {visitante.nome}
+      </p>
+      <p>
+        <strong>Documento:</strong>{" "}
+        {visitante.documento.replace(/\D/g, "").length > 11
+          ? formatCNPJ(visitante.documento)
+          : formatCPF(visitante.documento)}
+      </p>
+      <p>
+        <strong>Telefone:</strong> {formatPhone(visitante.telefone)}
+      </p>
+      {visitante.nomeEmpresa && (
+        <p>
+          <strong>Empresa:</strong> {visitante.nomeEmpresa}
+        </p>
+      )}
+    </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Observação
-                  </label>
-                  <Input
-                    placeholder="Ex: Visitante para manutenção"
-                    value={observacao}
-                    onChange={(e) => setObservacao(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
+    {/* ✅ CAMPOS ADICIONADOS AQUI */}
+    <div className="mt-4 grid grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium mb-1">Bloco</label>
+        <Input
+          placeholder="Ex: A"
+          value={bloco}
+          onChange={(e) => setBloco(e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Apartamento
+        </label>
+        <Input
+          placeholder="Ex: 101"
+          inputMode="numeric"
+          type="number"
+          value={apartamento}
+          onChange={(e) => setApartamento(e.target.value)}
+        />
+      </div>
+    </div>
+
+    <div className="mt-4">
+      <label className="block text-sm font-medium mb-1">
+        CPF do Morador (que autorizou)
+      </label>
+      <Input
+  placeholder="000.000.000-00"
+  value={cpfMorador}
+  onChange={(e) => setCpfMorador(formatCPF(e.target.value))}
+/>
+
+    </div>
+
+    <div className="mt-4">
+      <label className="block text-sm font-medium mb-1">Observação</label>
+      <Input
+        placeholder="Ex: Visitante para manutenção"
+        value={observacao}
+        onChange={(e) => setObservacao(e.target.value)}
+      />
+    </div>
+    {/* ✅ FIM DOS CAMPOS */}
+
+    <Button
+      onClick={salvarEntradaVisitante}
+      className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2 mt-4"
+    >
+      <FiSave size={16} />
+      Registrar
+    </Button>
+  </>
+)}
+
           </div>
         )}
       </div>

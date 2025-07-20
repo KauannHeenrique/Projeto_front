@@ -69,7 +69,7 @@ export default function Profile() {
       <div className="sticky top-0 z-20 bg-white border-b px-4 py-2 flex justify-between items-center shadow-sm">
   <Button
     type="button"
-    onClick={() => router.back()}
+    onClick={() => router.push("/home")}
     variant="ghost"
     className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
   >

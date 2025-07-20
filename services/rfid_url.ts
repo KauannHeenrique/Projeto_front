@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const rfid = axios.create({
-  baseURL: "http://172.20.10.3", // IP do módulo RFID
+  baseURL: "http://192.168.1.87", // IP do módulo RFID
   timeout: 3000, // opcional: define um tempo limite de resposta
 });
 

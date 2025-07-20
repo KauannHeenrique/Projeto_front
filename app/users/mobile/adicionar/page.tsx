@@ -265,30 +265,31 @@ return (
     </div>
 
     {/* Conteúdo Central com título e escolha */}
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <h1 className="text-xl font-bold text-center mb-6">Cadastrar Usuário</h1>
+<div className="max-w-2xl mx-auto px-4 py-6">
+  <h1 className="text-xl font-bold text-center mb-6">Cadastrar Usuário</h1>
 
-      <p className="text-gray-700 font-medium text-lg text-center mb-4">
-        Deseja cadastrar um:
-      </p>
+  <p className="text-gray-700 font-medium text-lg text-center mb-4">
+    Deseja cadastrar um:
+  </p>
 
-      <div className="flex gap-6 justify-center">
-        <button
-          onClick={() => setTipoCadastro("morador")}
-          className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
-        >
-          <FiUser size={32} className="text-indigo-600" />
-          <span className="font-semibold text-gray-700">Morador</span>
-        </button>
-        <button
-          onClick={() => setTipoCadastro("visitante")}
-          className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
-        >
-          <FiUsers size={32} className="text-indigo-600" />
-          <span className="font-semibold text-gray-700">Visitante</span>
-        </button>
-      </div>
-    </div>
+  <div className="flex gap-6 justify-center">
+    <button
+      onClick={() => setTipoCadastro("morador")}
+      className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-[#26c9a8] hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
+    >
+      <FiUser size={32} className="text-[#26c9a8]" />
+      <span className="font-semibold text-gray-700">Morador</span>
+    </button>
+    <button
+      onClick={() => setTipoCadastro("visitante")}
+      className="w-32 h-32 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-[#26c9a8] hover:shadow-md transition-all flex flex-col items-center justify-center gap-2"
+    >
+      <FiUsers size={32} className="text-[#26c9a8]" />
+      <span className="font-semibold text-gray-700">Visitante</span>
+    </button>
+  </div>
+</div>
+
   </div>
 )}
 

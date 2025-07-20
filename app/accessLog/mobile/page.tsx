@@ -76,29 +76,43 @@ export default function RegistroAcessosMobile() {
 
   const buscarAcessos = async () => {
     setMensagemErro("");
-    if (!modoCombinar && valorFiltro.trim() === "") {
-      setMensagemErro("Por favor, preencha o campo de filtro antes de buscar.");
+    if (!modoCombinar) {
+  if (tipoFiltro === "dataInicio") {
+    if (!filtroDataInicio && !filtroDataFim) {
+      setMensagemErro("Por favor, selecione uma data inicial ou final para buscar.");
       return;
     }
+  } else if (valorFiltro.trim() === "") {
+    setMensagemErro("Por favor, preencha o campo de filtro antes de buscar.");
+    return;
+  }
+}
+
 
     setBuscou(true);
 
     const filtros = modoCombinar
-      ? {
-          nome: filtroNome,
-          documento: filtroDocumento.replace(/\D/g, ""),
-          bloco: filtroBloco,
-          apartamento: filtroApartamento,
-          nivelAcesso: filtroNivel,
-          dataInicio: filtroDataInicio,
-          dataFim: filtroDataFim,
-        }
-      : {
-          [tipoFiltro]:
-            tipoFiltro === "documento"
-              ? valorFiltro.replace(/\D/g, "")
-              : valorFiltro,
-        };
+  ? {
+      nome: filtroNome,
+      documento: filtroDocumento.replace(/\D/g, ""),
+      bloco: filtroBloco,
+      numero: filtroApartamento,
+      nivelAcesso: filtroNivel,
+      dataInicio: filtroDataInicio,
+      dataFim: filtroDataFim,
+    }
+  : tipoFiltro === "dataInicio"
+  ? {
+      dataInicio: filtroDataInicio,
+      dataFim: filtroDataFim,
+    }
+  : {
+      [tipoFiltro === "apartamento" ? "numero" : tipoFiltro]:
+        tipoFiltro === "documento"
+          ? valorFiltro.replace(/\D/g, "")
+          : valorFiltro,
+    };
+
 
     const filtrosLimpos = Object.fromEntries(
       Object.entries(filtros).filter(([_, v]) => v !== "" && v !== undefined)
@@ -258,41 +272,75 @@ export default function RegistroAcessosMobile() {
         </div>
 
         {!modoCombinar ? (
-          <div className="flex gap-2">
-            <Input
-              placeholder={tipoFiltro === "documento" ? "Documento" : tipoFiltro.charAt(0).toUpperCase() + tipoFiltro.slice(1)}
-              value={tipoFiltro === "documento" ? formatCPF(valorFiltro) : valorFiltro}
-              onChange={(e) => setValorFiltro(e.target.value)}
-            />
-            <Button onClick={buscarAcessos} variant="outline">
-              <FaSearch size={14} className="text-black" />
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Input placeholder="Nome" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} />
-            <Input placeholder="Documento" value={formatCPF(filtroDocumento)} onChange={(e) => setFiltroDocumento(e.target.value)} />
-            <Input placeholder="Bloco" value={filtroBloco} onChange={(e) => setFiltroBloco(e.target.value)} />
-            <Input placeholder="Apartamento" value={filtroApartamento} onChange={(e) => setFiltroApartamento(e.target.value)} />
-            <select
-              value={filtroNivel}
-              onChange={(e) => setFiltroNivel(e.target.value)}
-              className="w-full text-sm border rounded px-2 py-2"
-            >
-              <option value="">Todos os níveis</option>
-              <option value="sindico">Síndico</option>
-              <option value="funcionario">Funcionário</option>
-              <option value="morador">Morador</option>
-            </select>
-            <div className="flex gap-2">
-              <Input type="date" value={filtroDataInicio} onChange={(e) => setFiltroDataInicio(e.target.value)} />
-              <Input type="date" value={filtroDataFim} onChange={(e) => setFiltroDataFim(e.target.value)} />
-            </div>
-            <Button onClick={buscarAcessos} variant="outline">
-              <FaSearch size={14} className="text-black" />
-            </Button>
-          </div>
-        )}
+  <div className="flex gap-2 w-full">
+    {tipoFiltro === "dataInicio" ? (
+      <>
+        <Input
+          type="date"
+          value={filtroDataInicio}
+          onChange={(e) => setFiltroDataInicio(e.target.value)}
+          className="flex-1"
+        />
+        <Input
+          type="date"
+          value={filtroDataFim}
+          onChange={(e) => setFiltroDataFim(e.target.value)}
+          className="flex-1"
+        />
+      </>
+    ) : tipoFiltro === "nivelAcesso" ? (
+      <select
+        value={valorFiltro}
+        onChange={(e) => setValorFiltro(e.target.value)}
+        className="w-full border rounded px-2 py-2 text-sm"
+      >
+        <option value="">Selecione o nível</option>
+        <option value="sindico">Síndico</option>
+        <option value="funcionario">Funcionário</option>
+        <option value="morador">Morador</option>
+      </select>
+    ) : (
+      <Input
+        placeholder={
+          tipoFiltro === "documento"
+            ? "Documento"
+            : tipoFiltro.charAt(0).toUpperCase() + tipoFiltro.slice(1)
+        }
+        value={tipoFiltro === "documento" ? formatCPF(valorFiltro) : valorFiltro}
+        onChange={(e) => setValorFiltro(e.target.value)}
+        className="flex-1"
+      />
+    )}
+    <Button onClick={buscarAcessos} variant="outline">
+      <FaSearch size={14} className="text-black" />
+    </Button>
+  </div>
+) : (
+  <div className="space-y-2">
+    <Input placeholder="Nome" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} />
+    <Input placeholder="Documento" value={formatCPF(filtroDocumento)} onChange={(e) => setFiltroDocumento(e.target.value)} />
+    <Input placeholder="Bloco" value={filtroBloco} onChange={(e) => setFiltroBloco(e.target.value)} />
+    <Input placeholder="Apartamento" value={filtroApartamento} onChange={(e) => setFiltroApartamento(e.target.value)} />
+    <select
+      value={filtroNivel}
+      onChange={(e) => setFiltroNivel(e.target.value)}
+      className="w-full text-sm border rounded px-2 py-2"
+    >
+      <option value="">Todos os níveis</option>
+      <option value="sindico">Síndico</option>
+      <option value="funcionario">Funcionário</option>
+      <option value="morador">Morador</option>
+    </select>
+    <div className="flex gap-2">
+      <Input type="date" value={filtroDataInicio} onChange={(e) => setFiltroDataInicio(e.target.value)} />
+      <Input type="date" value={filtroDataFim} onChange={(e) => setFiltroDataFim(e.target.value)} />
+    </div>
+    <Button onClick={buscarAcessos} variant="outline">
+      <FaSearch size={14} className="text-black" />
+    </Button>
+  </div>
+)}
+
 
         {/* Botão Exibir Todas */}
         <Button
@@ -319,17 +367,19 @@ export default function RegistroAcessosMobile() {
   {/* Nome */}
   <div className="font-semibold text-base">{a.nome}</div>
 
- <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-  <span>
-        {abaAtiva === "moradores"
-          ? `Nível: ${a.nivelAcesso || "-"}`
-          : `Apartamento: ${a.bloco}-${a.numero}`}
-      </span>
-      <span className="text-gray-400"> • </span>
-      <span>Data: {formatDate(a.dataHoraEntrada)}</span>
-      <span className="text-gray-400"> • </span>
-      <span>Hora: {formatHour(a.dataHoraEntrada)}</span>
-    </div>
+ <div className="text-sm text-gray-600">
+  <div>
+    {abaAtiva === "moradores"
+      ? `Nível: ${a.nivelAcesso || "-"}`
+      : `Apartamento: ${a.bloco}-${a.numero}`}
+  </div>
+  <div className="flex items-center gap-1 text-gray-500">
+    <span>Data: {formatDate(a.dataHoraEntrada)}</span>
+    <span className="text-gray-400">•</span>
+    <span>Hora: {formatHour(a.dataHoraEntrada)}</span>
+  </div>
+</div>
+
 
   {/* Botão */}
   <Button
@@ -341,7 +391,6 @@ export default function RegistroAcessosMobile() {
     Ver detalhes
   </Button>
 </div>
-
           ))
         )}
       </div>

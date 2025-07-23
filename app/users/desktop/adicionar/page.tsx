@@ -163,7 +163,7 @@
       }
       
       // ✅ Adicionar validação para RFID obrigatório
-      if (formData.codigoRFID.trim()) {
+      if (!formData.codigoRFID.trim()) {
       newErrors.codigoRFID = "Cadastre uma TAG para o usuário.";
       }
 
@@ -236,7 +236,7 @@
 
     console.log("Enviando dados para a API:", usuario);
 
-    const { data } = await api.post("/Usuario/AdicionarUsuario", usuario);
+    const { data } = await api.post("/Usuario/CadastrarUsuario", usuario);
     console.log("Resposta da API (cadastro):", data);
 
     setApiError("Morador cadastrado com sucesso!");

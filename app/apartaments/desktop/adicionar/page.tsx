@@ -42,7 +42,7 @@ export default function AddApartmentPage() {
   try {
     const { data } = await api.post("/Apartamento/CadastrarApartamento", body);
     setApiError("Apartamento cadastrado com sucesso!");
-    setTimeout(() => router.push("/apartamentos"), 1500);
+    setTimeout(() => router.push("/apartaments"), 1500);
   } catch (err: any) {
     const msg = err?.response?.data?.mensagem || "Erro ao conectar com a API.";
     setApiError(msg);
@@ -59,7 +59,7 @@ export default function AddApartmentPage() {
         <div className="sticky top-0 z-20 bg-white border-b px-4 sm:px-6 md:px-8 py-2 flex justify-between items-center shadow-sm">
           <Button
             type="button"
-            onClick={() => router.push("/apartamentos")}
+            onClick={() => router.push("/apartaments")}
             disabled={isLoading}
             variant="ghost"
             className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
@@ -72,10 +72,10 @@ export default function AddApartmentPage() {
             type="submit"
             form="addApartmentForm"
             disabled={isLoading}
-            className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+            className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
           >
             <FiSave size={16} />
-            {isLoading ? "Salvando..." : "Salvar"}
+            {isLoading ? "Adicionando..." : "Adicionar"}
           </Button>
         </div>
 

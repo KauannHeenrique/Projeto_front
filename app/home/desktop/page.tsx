@@ -32,12 +32,10 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const hoje = new Date().toISOString().split("T")[0];
-
         const [usuariosResponse, apartamentosResponse, entradaResponse] = await Promise.all([
           api.get("/Usuario/ExibirTodosUsuarios"),
           api.get("/Apartamento/ExibirTodosApartamentos"),
-          api.get(`/AcessoEntradaMorador/FiltrarEntradasAdmin?dataFim=${hoje}`)
+          api.get(`/AcessoEntradaMorador/AcessosHojeAdmin`)
         ]);
 
       const usuariosAtivos = usuariosResponse.data.filter((usuario: any) => usuario.status);
@@ -52,6 +50,32 @@ export default function Home() {
 
     fetchData();
   }, []);
+
+const [alertasAtivos, setAlertasAtivos] = useState<number>(0);
+
+useEffect(() => {
+  const fetchAlertasAtivos = async () => {
+    try {
+      const { data } = await api.get("/Notificacao/AlertasAtivosAdmin"); 
+      // Se a API retorna uma lista, pegamos o tamanho
+      if (Array.isArray(data)) {
+        setAlertasAtivos(data.length);
+      } else if (typeof data === "number") {
+        setAlertasAtivos(data);
+      } else {
+        console.warn("Formato inesperado da resposta da API:", data);
+        setAlertasAtivos(0);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar alertas ativos:", error);
+      setAlertasAtivos(0); // fallback
+    }
+  };
+
+  fetchAlertasAtivos();
+}, []);
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -106,15 +130,19 @@ export default function Home() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Alertas ativos</CardTitle>
-              <AlertCircle className="h-4 w-4 text-gray-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-gray-500">Nenhum alerta ativo</p>
-            </CardContent>
-          </Card>
+  <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <CardTitle className="text-sm font-medium">Alertas ativos</CardTitle>
+    <AlertCircle className="h-4 w-4 text-gray-500" />
+  </CardHeader>
+  <CardContent>
+    <div className="text-2xl font-bold">{alertasAtivos}</div>
+    <p className="text-xs text-gray-500">
+      {alertasAtivos > 0 ? "Alertas ativos no sistema" : "Nenhum alerta ativo"}
+    </p>
+  </CardContent>
+</Card>
+
+
         </div>
 
         {/* Ações rápidas */}
@@ -136,7 +164,7 @@ export default function Home() {
           </Card>
 
           <Card className="hover:shadow-lg transition-shadow">
-            <Link href="/apartamentos">
+            <Link href="/apartaments">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-full bg-green-100 p-3">

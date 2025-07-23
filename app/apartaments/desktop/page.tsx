@@ -94,8 +94,8 @@ export default function ApartmentsPage() {
     </Button>
 
     <Button
-      className="bg-green-500 hover:bg-green-600 text-white text-sm py-2 px-3"
-      onClick={() => router.push("/apartamentos/adicionar")}
+      className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white text-sm py-2 px-3"
+      onClick={() => router.push("/apartaments/desktop/adicionar")}
     >
       <span className="mr-2">+</span> Novo apartamento
     </Button>

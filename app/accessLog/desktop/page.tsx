@@ -8,6 +8,8 @@
   import { FiPlus, FiSearch, FiFileText } from "react-icons/fi";
   import { formatCPF, cleanDocument } from "@/services/formatValues";
   import api from "@/services/api"; 
+  import { KeyRound } from "lucide-react";
+  import { FaFilter, FaSearch } from "react-icons/fa";
 
   interface Acesso {
     id: number;
@@ -24,6 +26,8 @@
     const [modoCombinarVisitante, setModoCombinarVisitante] = useState(false);
   const [filtroTipoVisitante, setFiltroTipoVisitante] = useState("");
   const [valorFiltroVisitante, setValorFiltroVisitante] = useState("");
+
+  const [filtroBlocoUsuario, setFiltroBlocoUsuario] = useState("");
 
   const [filtroNomeVisitante, setFiltroNomeVisitante] = useState("");
   const [filtroDocumentoVisitante, setFiltroDocumentoVisitante] = useState("");
@@ -222,8 +226,9 @@
           params.append("nivelAcesso", valorFiltro);
         } else if (filtroTipo === "documento") {
           params.append("documento", cleanDocument(valorFiltro));
-        } else if (filtroTipo === "apartamento") {
-          params.append("numero", valorFiltro);
+       } else if (filtroTipo === "apartamento") {
+          if (filtroBlocoUsuario) params.append("bloco", filtroBlocoUsuario);
+          if (filtroApartamento) params.append("numero", filtroApartamento);
         } else if (filtroTipo === "bloco") {
           params.append("bloco", valorFiltro);
         } else if (filtroTipo === "nome") {
@@ -242,81 +247,74 @@ const data = response.data;
   };
 
     const renderCampoData = () => (
-      <>
-        <Input
-          type="date"
-          placeholder="Início"
-          aria-label="Data de início"
-          className={dataInicio ? "text-black" : "text-gray-500"}
-          value={(() => {
-            const parts = dataInicio.split("-");
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return dataInicio;
-          })()}
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (!raw) return setDataInicio("");
-            const [ano, mes, dia] = raw.split("-");
-            setDataInicio(`${dia}-${mes}-${ano}`);
-          }}
-        />
-        <Input
-          type="date"
-          placeholder="Fim"
-          aria-label="Data final"
-          className={dataFim ? "text-black" : "text-gray-500"}
-          value={(() => {
-            const parts = dataFim.split("-");
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return dataFim;
-          })()}
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (!raw) return setDataFim("");
-            const [ano, mes, dia] = raw.split("-");
-            setDataFim(`${dia}-${mes}-${ano}`);
-          }}
-        />
-      </>
-    );
+  <div className="col-span-2 grid grid-cols-2 gap-2 w-full">
+    <Input
+      type="date"
+      placeholder="Início"
+      aria-label="Data de início"
+      value={(() => {
+        const parts = dataInicio.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataInicio;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataInicio("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataInicio(`${dia}-${mes}-${ano}`);
+      }}
+    />
+    <Input
+      type="date"
+      placeholder="Fim"
+      aria-label="Data final"
+      value={(() => {
+        const parts = dataFim.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataFim;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataFim("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataFim(`${dia}-${mes}-${ano}`);
+      }}
+    />
+  </div>
+);
 
-    const renderCampoDataVisitante = () => (
-    <>
-      <Input
-        type="date"
-        placeholder="Início"
-        aria-label="Data de início"
-        className={dataInicioVisitante ? "text-black" : "text-gray-500"}
-        value={(() => {
-          const parts = dataInicioVisitante.split("-");
-          return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataInicioVisitante;
-        })()}
-        onChange={(e) => {
-          const raw = e.target.value;
-          if (!raw) return setDataInicioVisitante("");
-          const [ano, mes, dia] = raw.split("-");
-          setDataInicioVisitante(`${dia}-${mes}-${ano}`);
-        }}
-      />
-      <Input
-        type="date"
-        placeholder="Fim"
-        aria-label="Data final"
-        className={dataFimVisitante ? "text-black" : "text-gray-500"}
-        value={(() => {
-          const parts = dataFimVisitante.split("-");
-          return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataFimVisitante;
-        })()}
-        onChange={(e) => {
-          const raw = e.target.value;
-          if (!raw) return setDataFimVisitante("");
-          const [ano, mes, dia] = raw.split("-");
-          setDataFimVisitante(`${dia}-${mes}-${ano}`);
-        }}
-      />
-    </>
-  );
-
+const renderCampoDataVisitante = () => (
+  <div className="col-span-2 grid grid-cols-2 gap-2 w-full">
+    <Input
+      type="date"
+      placeholder="Início"
+      aria-label="Data de início"
+      value={(() => {
+        const parts = dataInicioVisitante.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataInicioVisitante;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataInicioVisitante("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataInicioVisitante(`${dia}-${mes}-${ano}`);
+      }}
+    />
+    <Input
+      type="date"
+      placeholder="Fim"
+      aria-label="Data final"
+      value={(() => {
+        const parts = dataFimVisitante.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataFimVisitante;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataFimVisitante("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataFimVisitante(`${dia}-${mes}-${ano}`);
+      }}
+    />
+  </div>
+);
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -335,9 +333,9 @@ const data = response.data;
             </Button>
             <Button
               onClick={() => router.push("/accessLog/add")}
-              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm flex items-center gap-2"
+              className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-3 py-2 text-sm flex items-center gap-2"
             >
-              <FiPlus size={16} /> Adicionar Registro
+              <KeyRound size={16} /> Adicionar Registro
             </Button>
           </div>
         </div>
@@ -345,13 +343,13 @@ const data = response.data;
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-start gap-4 border-b border-gray-200 mb-6">
             <button
-              className={`py-2 px-4 text-sm font-medium ${abaAtiva === "moradores" ? "border-b-2 border-indigo-600 text-indigo-600" : "text-gray-600"}`}
+              className={`py-2 px-4 text-sm font-medium ${abaAtiva === "moradores" ? "border-b-2 border-[#26c9a8] text-[#26c9a8]" : "text-gray-600"}`}
               onClick={() => setAbaAtiva("moradores")}
             >
               Moradores
             </button>
             <button
-              className={`py-2 px-4 text-sm font-medium ${abaAtiva === "visitantes" ? "border-b-2 border-indigo-600 text-indigo-600" : "text-gray-600"}`}
+              className={`py-2 px-4 text-sm font-medium ${abaAtiva === "visitantes" ? "border-b-2 border-[#26c9a8] text-[#26c9a8]" : "text-gray-600"}`}
               onClick={() => setAbaAtiva("visitantes")}
             >
               Visitantes
@@ -361,14 +359,15 @@ const data = response.data;
           {abaAtiva === "moradores" && (
             <>
               <div className="flex justify-between items-center mb-6 flex-wrap">
-                <h1 className="text-xl md:text-2xl font-bold">Registro de Acessos</h1>
+                <h1 className="text-xl md:text-2xl font-bold">Registro de usuários</h1>
                 <span className="text-sm text-gray-600">Total de acessos: {totalExibidos}</span>
               </div>
 
               {erros && <div className="bg-red-100 text-red-700 p-3 rounded">{erros}</div>}
 
               {!modoCombinar ? (
-                <div className="relative grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                  <div className="flex gap-2 justify-end">
+
                   <select
                     value={filtroTipo}
                     onChange={(e) => setFiltroTipo(e.target.value)}
@@ -378,7 +377,6 @@ const data = response.data;
                     <option value="nome">Nome</option>
                     <option value="documento">Documento</option>
                     <option value="data">Data</option>
-                    <option value="bloco">Bloco</option>
                     <option value="apartamento">Apartamento</option>
                     <option value="nivel">Nível de acesso</option>
                     <option value="todas">Todas as entradas</option>
@@ -403,25 +401,33 @@ const data = response.data;
       className="col-span-2"
     />
   )}
+  <div className="w-full flex flex-col md:flex-row flex-wrap items-end gap-4 justify-start">
 
-  {filtroTipo === "bloco" && (
-    <Input
-      type="text"
-      placeholder="Digite o bloco"
-      value={valorFiltro}
-      onChange={(e) => setValorFiltro(e.target.value)}
-    />
-  )}
+    {/* ✅ Novo comportamento para Apartamento */}
+      {filtroTipo === "apartamento" && (
+        <div className="flex gap-2 w-full">
+  <Input
+    type="text"
+    placeholder="Bloco (opcional)"
+    value={filtroBlocoUsuario}
+    onChange={(e) => setFiltroBlocoUsuario(e.target.value)}
+    className="flex-1"
+  />
+  <Input
+  type="text"
+  placeholder="Apartamento (opcional)"
+  value={filtroApartamento}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+    setFiltroApartamento(onlyNumbers);
+  }}
+  className="flex-1"
+/>
 
-  {filtroTipo === "apartamento" && (
-    <Input
-      type="text"
-      placeholder="Digite o apartamento"
-      value={valorFiltro}
-      onChange={(e) => setValorFiltro(e.target.value)}
-    />
-  )}
+</div>
 
+      )}
+    
 
   {filtroTipoVisitante === "documento" && (
     <Input
@@ -441,16 +447,50 @@ const data = response.data;
         value={filtroBlocoVisitado}
         onChange={(e) => setFiltroBlocoVisitado(e.target.value)}
       />
-      <Input
-        type="text"
-        placeholder="Apartamento"
-        value={filtroAptoVisitado}
-        onChange={(e) => setFiltroAptoVisitado(e.target.value)}
-      />
+      <div className="md:col-span-3">
+                          <Input
+                            type="text"
+                            placeholder="Apartamento"
+                            value={filtroApartamento}
+                            onChange={(e) => setFiltroApartamento(e.target.value)}
+                          />
+                        </div>
     </>
   )}
 
-                  {filtroTipo === "data" && renderCampoData()}
+                 {/* Filtro de data para Moradores */}
+{filtroTipo === "data" && (
+  <div className="col-span-2 grid grid-cols-2 gap-2 w-full">
+    <Input
+      type="date"
+      placeholder="Início"
+      value={(() => {
+        const parts = dataInicio.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataInicio;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataInicio("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataInicio(`${dia}-${mes}-${ano}`);
+      }}
+    />
+    <Input
+      type="date"
+      placeholder="Fim"
+      value={(() => {
+        const parts = dataFim.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataFim;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataFim("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataFim(`${dia}-${mes}-${ano}`);
+      }}
+    />
+  </div>
+)}
 
                   {filtroTipo === "nivel" && filtroTipo !== "todas" && (
                     <select
@@ -465,48 +505,141 @@ const data = response.data;
                     </select>
                   )}
 
-                  {filtroTipo && filtroTipo !== "todas" && (
-                    <Button onClick={() => setModoCombinar(true)} variant="outline" className="text-xs">
-                      Combinar filtros
-                    </Button>
-                  )}
+</div>
 
-                  <div className="absolute right-0 -bottom-12 md:static md:col-span-1">
-                    <Button onClick={handleBuscar} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                      <FiSearch size={18} />
-                    </Button>
-                  </div>
+                  <div className="flex gap-2 justify-end">
+                          <Button
+                            type="button"
+                            onClick={() => setModoCombinar(true)}
+                            className="text-sm flex items-center gap-1"
+                            variant={setModoCombinar ? "outline" : "default"}
+                          >
+                            <FaFilter size={14} />
+                            Combinar filtros
+                          </Button>
+                  
+                          <Button
+                            onClick={handleBuscar}
+                            className="text-sm flex items-center gap-1 bg-black text-white hover:bg-zinc-800"
+                          >
+                            <FaSearch size={14} />
+                          </Button>
+                        </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input type="text" placeholder="Nome" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} />
-                    <Input
-    type="text"
-    placeholder="Documento"
-    value={formatCPF(filtroDocumento)}
-    onChange={(e) => setFiltroDocumento(cleanDocument(e.target.value))}
-  />
-                    <div className="flex gap-2">{renderCampoData()}</div>
-                    <Input type="text" placeholder="Bloco" value={filtroBloco} onChange={(e) => setFiltroBloco(e.target.value)} />
-                    <Input type="text" placeholder="Apartamento" value={filtroApartamento} onChange={(e) => setFiltroApartamento(e.target.value)} />
-                    <select value={filtroNivel} onChange={(e) => setFiltroNivel(e.target.value)} className="border border-gray-300 rounded px-3 py-2">
-                      <option value="">Selecione nível</option>
-                      <option value="sindico">Síndico</option>
-                      <option value="funcionario">Funcionário</option>
-                      <option value="morador">Morador</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-4">
-                    <Button onClick={handleBuscar} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                      <FiSearch size={18} />
-                    </Button>
-                    <Button onClick={() => setModoCombinar(false)} variant="outline">
-                      Voltar para filtro único
-                    </Button>
-                  </div>
-                </div>
-              )}
+                    <div className="space-y-4 mb-6">
+  {/* Linha 1: Nome, Documento, Botões */}
+  <div className="grid grid-cols-12 gap-4 items-end">
+    {/* Nome */}
+    <div className="col-span-6">
+      <Input
+        type="text"
+        placeholder="Nome"
+        value={filtroNome}
+        onChange={(e) => setFiltroNome(e.target.value)}
+      />
+    </div>
+
+    {/* Documento */}
+    <div className="col-span-3">
+      <Input
+        type="text"
+        placeholder="Documento"
+        value={formatCPF(filtroDocumento)}
+        onChange={(e) =>
+          setFiltroDocumento(e.target.value.replace(/\D/g, ""))
+        }
+      />
+    </div>
+
+    {/* Botões */}
+    <div className="col-span-3 flex justify-end gap-2">
+      <Button
+                            type="button"
+                            onClick={() => setModoCombinar(false)}
+                            className="text-sm flex items-center gap-1"
+                            variant={setModoCombinar ? "default" : "outline"}
+                          >
+                            <FaFilter size={14} />
+                            Combinar filtros
+                          </Button>
+      <Button
+        onClick={handleBuscar}
+        className="bg-black hover:bg-gray-800 text-white w-12 h-10 flex items-center justify-center"
+      >
+        <FaSearch size={16} />
+      </Button>
+    </div>
+  </div>
+
+  {/* Linha 2: Bloco, Apartamento, Data início, Data fim */}
+  <div className="grid grid-cols-12 gap-4">
+    {/* Bloco */}
+    <div className="col-span-3">
+      <Input
+        type="text"
+        placeholder="Bloco"
+        value={filtroBloco}
+        onChange={(e) => setFiltroBloco(e.target.value)}
+      />
+    </div>
+
+    {/* Apartamento */}
+    <div className="col-span-3">
+      <Input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        placeholder="Apartamento"
+        value={filtroApartamento}
+        onChange={(e) => {
+          const onlyNumbers = e.target.value.replace(/\D/g, "");
+          setFiltroApartamento(onlyNumbers);
+        }}
+      />
+    </div>
+
+    {/* Data Início */}
+    <div className="col-span-3">
+      <Input
+        type="date"
+        value={(() => {
+          const parts = dataInicio.split("-");
+          return parts.length === 3
+            ? `${parts[2]}-${parts[1]}-${parts[0]}`
+            : dataInicio;
+        })()}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (!raw) return setDataInicio("");
+          const [ano, mes, dia] = raw.split("-");
+          setDataInicio(`${dia}-${mes}-${ano}`);
+        }}
+      />
+    </div>
+
+    {/* Data Fim */}
+    <div className="col-span-3">
+      <Input
+        type="date"
+        value={(() => {
+          const parts = dataFim.split("-");
+          return parts.length === 3
+            ? `${parts[2]}-${parts[1]}-${parts[0]}`
+            : dataFim;
+        })()}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (!raw) return setDataFim("");
+          const [ano, mes, dia] = raw.split("-");
+          setDataFim(`${dia}-${mes}-${ano}`);
+        }}
+      />
+    </div>
+  </div>
+</div>
+
+                  )}
 
               {!buscou ? (
                 <p className="text-gray-500 mt-6">Use os filtros acima para buscar registros de acesso.</p>
@@ -552,14 +685,15 @@ const data = response.data;
           {abaAtiva === "visitantes" && (
     <>
       <div className="flex justify-between items-center mb-6 flex-wrap">
-        <h1 className="text-xl md:text-2xl font-bold">Acessos de Visitantes</h1>
+        <h1 className="text-xl md:text-2xl font-bold">Registro de visitantes</h1>
         <span className="text-sm text-gray-600">Total de acessos: {acessos.length}</span>
       </div>
 
       {erros && <div className="bg-red-100 text-red-700 p-3 rounded">{erros}</div>}
 
       {!modoCombinarVisitante ? (
-        <div className="relative grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+         <div className="flex gap-2 justify-end">
+    <div className="w-full flex flex-col md:flex-row items-end gap-4 justify-between">
           <select
             value={filtroTipoVisitante}
             onChange={(e) => setFiltroTipoVisitante(e.target.value)}
@@ -592,73 +726,194 @@ const data = response.data;
     />
   )}
 
-  {filtroTipoVisitante === "data" && renderCampoDataVisitante()}
+  {/* Filtro de data para Visitantes */}
+{filtroTipoVisitante === "data" && (
+  <div className="col-span-2 grid grid-cols-2 gap-2 w-full">
+    <Input
+      type="date"
+      placeholder="Início"
+      value={(() => {
+        const parts = dataInicioVisitante.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataInicioVisitante;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataInicioVisitante("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataInicioVisitante(`${dia}-${mes}-${ano}`);
+      }}
+    />
+    <Input
+      type="date"
+      placeholder="Fim"
+      value={(() => {
+        const parts = dataFimVisitante.split("-");
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataFimVisitante;
+      })()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!raw) return setDataFimVisitante("");
+        const [ano, mes, dia] = raw.split("-");
+        setDataFimVisitante(`${dia}-${mes}-${ano}`);
+      }}
+    />
+  </div>
+)}
 
   {filtroTipoVisitante === "apartamentoVisitado" && (
-    <>
+        <div className="flex gap-2 w-full">
+  <Input
+    type="text"
+    placeholder="Bloco (opcional)"
+    value={filtroBlocoVisitado}
+    onChange={(e) => setFiltroBlocoVisitado(e.target.value)}
+    className="flex-1"
+  />
+  <Input
+  type="text"
+  placeholder="Apartamento (opcional)"
+  value={filtroAptoVisitado}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+    setFiltroAptoVisitado(onlyNumbers);
+  }}
+  className="flex-1"
+/>
+
+</div>
+
+      )}
+        </div>
+
+
+          <div className="flex gap-2 justify-end">
+                          <Button
+                            type="button"
+                            onClick={() => setModoCombinarVisitante(true)}
+                            className="text-sm flex items-center gap-1"
+                            variant={setModoCombinarVisitante ? "outline" : "default"}
+                          >
+                            <FaFilter size={14} />
+                            Combinar filtros
+                          </Button>
+                  
+                          <Button
+                            onClick={handleBuscar}
+                            className="text-sm flex items-center gap-1 bg-black text-white hover:bg-zinc-800"
+                          >
+                            <FaSearch size={14} />
+                          </Button>
+                        </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+  {/* Primeira linha */}
+  <div className="grid grid-cols-12 gap-4 items-end">
+    {/* Nome (6 colunas) */}
+    <div className="col-span-6">
+      <Input
+        type="text"
+        placeholder="Nome"
+        value={filtroNomeVisitante}
+        onChange={(e) => setFiltroNomeVisitante(e.target.value)}
+      />
+    </div>
+
+    {/* Documento (3 colunas) */}
+    <div className="col-span-3">
+      <Input
+        type="text"
+        placeholder="Documento"
+        value={formatCPF(filtroDocumentoVisitante)}
+        onChange={(e) => setFiltroDocumentoVisitante(cleanDocument(e.target.value))}
+      />
+    </div>
+
+    {/* Botões (2 colunas) */}
+    <div className="col-span-3 flex justify-end gap-2">
+      <Button
+                            type="button"
+                            onClick={() => setModoCombinarVisitante(false)}
+                            className="text-sm flex items-center gap-1"
+                            variant={setModoCombinarVisitante ? "default" : "outline"}
+                          >
+                            <FaFilter size={14} />
+                            Combinar filtros
+                          </Button>
+      <Button
+        onClick={handleBuscarVisitantes}
+        className="bg-black hover:bg-gray-800 text-white w-12 h-10 flex items-center justify-center"
+      >
+        <FaSearch size={16} />
+      </Button>
+    </div>
+  </div>
+
+  {/* Segunda linha */}
+  <div className="grid grid-cols-12 gap-4">
+    {/* Bloco (3 colunas) */}
+    <div className="col-span-3">
       <Input
         type="text"
         placeholder="Bloco"
         value={filtroBlocoVisitado}
         onChange={(e) => setFiltroBlocoVisitado(e.target.value)}
       />
-      <Input
-        type="text"
-        placeholder="Apartamento"
-        value={filtroAptoVisitado}
-        onChange={(e) => setFiltroAptoVisitado(e.target.value)}
-      />
-    </>
-  )}
+    </div>
 
-
-          {filtroTipoVisitante && (
-            <Button onClick={() => setModoCombinarVisitante(true)} variant="outline" className="text-xs">
-              Combinar filtros
-            </Button>
-          )}
-
-          <div className="absolute right-0 -bottom-12 md:static md:col-span-1">
-            <Button onClick={handleBuscarVisitantes} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              <FiSearch size={18} />
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <Input type="text" placeholder="Nome" value={filtroNomeVisitante} onChange={(e) => setFiltroNomeVisitante(e.target.value)} />
-    <Input
+    {/* Apartamento (3 colunas) */}
+    <div className="col-span-3">
+  <Input
     type="text"
-    placeholder="Documento"
-    value={formatCPF(filtroDocumentoVisitante)}
-    onChange={(e) => setFiltroDocumentoVisitante(cleanDocument(e.target.value))}
+    placeholder="Apartamento"
+    inputMode="numeric"
+    value={filtroAptoVisitado}
+    onChange={(e) => {
+      const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+      setFiltroAptoVisitado(onlyNumbers);
+    }}
   />
-    <div className="flex gap-2">{renderCampoDataVisitante()}</div>
+</div>
 
-    <Input
-      type="text"
-      placeholder="Bloco"
-      value={filtroBlocoVisitado}
-      onChange={(e) => setFiltroBlocoVisitado(e.target.value)}
-    />
-    <Input
-      type="text"
-      placeholder="Apartamento"
-      value={filtroAptoVisitado}
-      onChange={(e) => setFiltroAptoVisitado(e.target.value)}
-    />
+
+    {/* Data Início (3 colunas) */}
+    <div className="col-span-3">
+      <Input
+        type="date"
+        value={(() => {
+          const parts = dataInicioVisitante.split("-");
+          return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataInicioVisitante;
+        })()}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (!raw) return setDataInicioVisitante("");
+          const [ano, mes, dia] = raw.split("-");
+          setDataInicioVisitante(`${dia}-${mes}-${ano}`);
+        }}
+      />
+    </div>
+
+    {/* Data Fim (3 colunas) */}
+    <div className="col-span-3">
+      <Input
+        type="date"
+        value={(() => {
+          const parts = dataFimVisitante.split("-");
+          return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dataFimVisitante;
+        })()}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (!raw) return setDataFimVisitante("");
+          const [ano, mes, dia] = raw.split("-");
+          setDataFimVisitante(`${dia}-${mes}-${ano}`);
+        }}
+      />
+    </div>
   </div>
+</div>
 
-          <div className="flex gap-4">
-            <Button onClick={handleBuscarVisitantes} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              <FiSearch size={18} />
-            </Button>
-            <Button onClick={() => setModoCombinarVisitante(false)} variant="outline">
-              Voltar para filtro único
-            </Button>
-          </div>
-        </div>
+
+
       )}
 
       {!buscou ? (

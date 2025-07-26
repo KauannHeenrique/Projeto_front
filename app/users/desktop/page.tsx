@@ -407,7 +407,7 @@ const buscarVisitantes = async () => {
     }
 
     const mappedVisitantes: Visitante[] = data.map((visitante: any) => ({
-      id: visitante.id,
+      id: visitante.visitanteId,
       nome: visitante.nome || "Nome não informado",
       documento: visitante.documento || "Não informado",
       telefone: visitante.telefone || "Telefone não informado",
@@ -886,7 +886,6 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
                       <tr
                         key={`${user.id}-${index}`}
                         className="border-b hover:bg-gray-50 transition cursor-pointer"
-                        onClick={() => router.push(`/users/${user.id}`)}
                       >
                         <td className="px-4 py-3 text-left font-bold capitalize">{user.nome}</td>
                         <td className="px-4 py-3">{user.bloco}</td>
@@ -1116,7 +1115,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
         {visitantes.map((v, index) => (
           <tr key={`${v.id}-${index}`} className="border-b hover:bg-gray-50 transition">
             <td className="px-4 py-3 text-left font-medium">{v.nome}</td>
-            <td className="px-4 py-3">{v.telefone}</td>
+            <td className="px-4 py-3">{formatPhone(v.telefone)}</td>
             <td className="px-4 py-3 text-center">
               {v.status ? (
                 <span className="inline-flex items-center gap-1 text-green-600 font-medium">

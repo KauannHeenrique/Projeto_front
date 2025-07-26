@@ -149,34 +149,6 @@ export default function EditUser() {
   }
 };
 
-  const buscarApartamento = async () => {
-  const blocoLimpo = bloco.trim().toUpperCase();
-  const numeroLimpo = numero.trim();
-
-  if (!blocoLimpo || !numeroLimpo) {
-    setApiError("Informe o bloco e número do apartamento.");
-    return;
-  }
-
-  try {
-    const { data } = await api.get("/Apartamento/BuscarApartamentoPor", {
-      params: { bloco: blocoLimpo, numero: numeroLimpo }
-    });
-
-    if (Array.isArray(data) && data.length > 0) {
-      setFormData((prev) => ({ ...prev, apartmentId: data[0].id.toString() }));
-      setApiError("Apartamento encontrado com sucesso!");
-    } else {
-      setFormData((prev) => ({ ...prev, apartmentId: "" }));
-      setApiError("Apartamento não encontrado.");
-    }
-  } catch (err: any) {
-    const msg = err?.response?.data?.mensagem || "Erro ao buscar apartamento.";
-    setApiError(msg);
-  }
-};
-
-
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsLoading(true);
@@ -184,23 +156,45 @@ export default function EditUser() {
   setApiError(null);
 
   // Se não for funcionário, forçar busca do apartamento antes de enviar
-  if (formData.accessLevel !== "funcionario") {
-    const buscaAntes = formData.apartmentId === "";
-    if (buscaAntes) {
-      await buscarApartamento();
-      // Se ainda não tiver apartmentId depois da busca, cancela o envio
-      if (!formData.apartmentId || formData.apartmentId === "") {
-        setIsLoading(false);
-        setApiError("Não foi possível localizar o apartamento. Verifique os campos e tente novamente.");
-        return;
-      }
-    }
+  // Se não for funcionário, buscar apartamento automaticamente
+if (formData.accessLevel !== "funcionario") {
+  if (!bloco.trim() || !numero.trim()) {
+    setIsLoading(false);
+    setApiError("Informe o bloco e número do apartamento.");
+    return;
   }
 
+  try {
+  const { data } = await api.get("/Apartamento/BuscarApartamentoPor", {
+    params: { bloco: bloco.trim().toUpperCase(), numero: numero.trim() },
+  });
+
+  if (Array.isArray(data) && data.length > 0) {
+    formData.apartmentId = data[0].id.toString();
+  } else {
+    setIsLoading(false);
+    setApiError("Não encontramos nenhum apartamento com o bloco e número informados. Por favor, revise os dados.");
+    return;
+  }
+} catch (err: any) {
+  setIsLoading(false);
+
+  if (err.response?.status === 404) {
+    setApiError("Apartamento não encontrado. Verifique o bloco e número informados.");
+  } else {
+    setApiError("Ocorreu um erro inesperado ao buscar o apartamento. Tente novamente mais tarde.");
+  }
+
+  return;
+}
+
+}
+
+
   const nivelAcessoMap: { [key: string]: number } = {
-    funcionario: 1,
-    sindico: 3,
-    morador: 2,
+    sindico: 2,
+    funcionario: 3,
+    morador: 4,
   };
 
   const usuario = {
@@ -235,6 +229,8 @@ telefone: cleanDocument(formData.phone),
 };
 // POP UP para remover usuário
 const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
+const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
+
 
   return (
   <div className="min-h-screen bg-gray-50">
@@ -317,6 +313,74 @@ const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
 )}
 
 
+{mostrarPopupSalvar && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+      {/* Botão fechar */}
+      <button
+        onClick={() => setMostrarPopupSalvar(false)}
+        className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+      >
+        ×
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4 text-black-600 flex items-center justify-center gap-2">
+      Confirmar edição?
+      </h2>
+
+      
+
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => setMostrarPopupSalvar(false)}
+          className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded"
+        >
+          Cancelar
+        </Button>
+        <Button
+  onClick={async () => {
+    try {
+      const nivelAcessoMap = { sindico: 2, funcionario: 3, morador: 4 };
+
+      const usuario = {
+        usuarioId: Number(id),
+        nome: formData.name,
+        documento: cleanDocument(formData.document),
+        email: formData.email,
+        telefone: cleanDocument(formData.phone),
+        nivelAcesso: nivelAcessoMap[formData.accessLevel],
+        apartamentoId:
+          formData.accessLevel === "funcionario"
+            ? null
+            : parseInt(formData.apartmentId) || null,
+        codigoRFID: formData.codigoRFID || null,
+        status: formData.status === "ativo",
+      };
+
+      await api.put(`/Usuario/AtualizarUsuario/${id}`, usuario, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      setApiError("Usuário atualizado com sucesso!");
+      setMostrarPopupSalvar(false);
+      setTimeout(() => router.push("/users/desktop"), 900);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao salvar alterações.";
+      console.error("Erro ao salvar:", msg);
+      setApiError(msg);
+      setMostrarPopupSalvar(false); // ✅ Fechar modal mesmo com erro
+    }
+  }}
+  className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+>
+  Confirmar
+</Button>
+      </div>
+    </div>
+  </div>
+)}
+
+
         <Button
         type="button"
         onClick={() => setMostrarPopupExcluir(true)}
@@ -329,8 +393,8 @@ const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
         </Button>
 
         <Button
-          type="submit"
-          form="editUserForm"
+          type="button" // ✅ Não dispara submit automaticamente
+          onClick={() => setMostrarPopupSalvar(true)}
           disabled={isLoading}
           variant="ghost"
           className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
@@ -348,10 +412,19 @@ const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
       <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Editar usuário</h1>
 
       {apiError && (
-        <div className={`mb-4 p-4 rounded ${apiError.includes("sucesso") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-          {apiError}
-        </div>
-      )}
+  <div
+    className={`mb-4 p-4 rounded ${
+      apiError.includes("sucesso")
+        ? "bg-green-100 text-green-700"
+        : "bg-red-100 text-red-700"
+    }`}
+  >
+    {apiError}
+  </div>
+)}
+
+
+
 
       <form onSubmit={handleSubmit} id="editUserForm" className="space-y-6">
   <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
@@ -463,14 +536,6 @@ const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
             disabled={isLoading}
             className="border border-gray-300 w-full"
           />
-          <Button
-            type="button"
-            onClick={buscarApartamento}
-            disabled={isLoading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-          >
-            <FiSearch size={20} />
-          </Button>
         </div>
         {errors.apartmentId && <p className="text-sm text-red-600 mt-1">{errors.apartmentId}</p>}
       </div>

@@ -29,6 +29,25 @@ export default function Home() {
   const [totalApartamentos, setTotalApartamentos] = useState<number>(0);
   const [totalEntradas, setTotalEntradas] = useState<number>(0);
 
+const [alertasRecentes, setAlertasRecentes] = useState<any[]>([]);
+
+useEffect(() => {
+  const fetchAlertas = async () => {
+    try {
+      const { data } = await api.get("/Notificacao/AlertasAtivosAdmin");
+      if (Array.isArray(data)) {
+        setAlertasRecentes(data);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar notificações:", error);
+    }
+  };
+
+  fetchAlertas();
+}, []);
+
+
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -196,42 +215,65 @@ useEffect(() => {
           </Card>
         </div>
 
-        {/* Atividade Recente */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentActivities.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Nenhuma atividade registrada ainda
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-0"
+       <Card>
+  <CardHeader>
+    <div className="flex items-center justify-between">
+      <CardTitle>Notificações Recentes</CardTitle>
+      <Link
+        href="/notificacoes"
+        className="text-sm text-blue-600 hover:underline"
+      >
+        Ver todas
+      </Link>
+    </div>
+  </CardHeader>
+  <CardContent>
+    {alertasRecentes.length === 0 ? (
+      <div className="text-center py-8 text-gray-500">
+        Nenhuma notificação registrada ainda
+      </div>
+    ) : (
+      <div className="divide-y divide-gray-100">
+        {alertasRecentes.slice(0, 5).map((alerta) => (
+          <div
+            key={alerta.id}
+            className="flex items-center justify-between py-4 hover:bg-gray-50 rounded-lg transition"
+          >
+            {/* Esquerda: Ícone + Título + Data */}
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-6 w-6 text-red-500 mt-1" />
+              <div>
+                <p className="font-semibold text-gray-800 truncate max-w-[200px]">
+                  {alerta.titulo || "Alerta"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {new Date(alerta.dataCriacao).toLocaleDateString("pt-BR")} ·{" "}
+                  <span
+                    className={`${
+                      alerta.status === "Ativo"
+                        ? "text-green-600 font-medium"
+                        : "text-gray-500"
+                    }`}
                   >
-                    <div>
-                      <p className="font-medium">{activity.description}</p>
-                      <p className="text-sm text-gray-500">{activity.time}</p>
-                    </div>
-                    <div
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        activity.status === "success"
-                          ? "bg-green-100 text-green-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {activity.type}
-                    </div>
-                  </div>
-                ))}
+                    {alerta.status}
+                  </span>
+                </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+
+            {/* Direita: Botão Ver Detalhes */}
+            <Link href={`/notification/admin/details/${alerta.id}`}>
+              <Button variant="outline" size="sm">
+                Ver detalhes
+              </Button>
+            </Link>
+          </div>
+        ))}
+      </div>
+    )}
+  </CardContent>
+</Card>
+
       </main>
     </div>
   );

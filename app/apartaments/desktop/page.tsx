@@ -162,7 +162,7 @@ export default function ApartmentsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          router.push(`/apartamentos/${apt.id}/editar`)
+                          router.push(`/apartaments/desktop/${apt.id}/editar`)
                         }
                       >
                         Ver detalhes

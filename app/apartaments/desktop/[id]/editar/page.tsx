@@ -69,7 +69,7 @@ setObservacoes(data.observacoes || "");
     try {
       await api.put(`/Apartamento/AtualizarApartamento/${id}`, body);
 alert("Apartamento atualizado com sucesso!");
-router.push("/apartamentos");
+router.push("/apartaments/desktop");
 
     } catch (err: any) {
       setApiError("Erro ao conectar com a API: " + (err.message || "verifique a URL ou o servidor."));
@@ -83,7 +83,7 @@ router.push("/apartamentos");
       setIsLoading(true);
       await api.delete(`/Apartamento/ExcluirApartamento/${id}`);
 alert("Apartamento excluído com sucesso!");
-router.push("/apartamentos");
+router.push("/apartaments/desktop");
 
     } catch {
       setApiError("Erro ao conectar com a API.");
@@ -99,7 +99,7 @@ router.push("/apartamentos");
       {/* Botão Voltar */}
       <Button
         type="button"
-        onClick={() => router.push("/apartamentos")}
+        onClick={() => router.push("/apartaments/desktop")}
         disabled={isLoading}
         variant="ghost"
         className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
@@ -125,7 +125,7 @@ router.push("/apartamentos");
           type="submit"
           form="editApartmentForm"
           disabled={isLoading}
-          className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+          className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
         >
           <FiSave size={16} />
           {isLoading ? "Salvando..." : "Salvar"}

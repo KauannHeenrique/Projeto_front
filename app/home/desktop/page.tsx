@@ -8,8 +8,13 @@ import {
   KeyRound,
   AlertCircle,
   PlusIcon,
-  HomeIcon
+  HomeIcon,
+  Loader, 
+  CheckCircle,
+  Clock,
+  XCircle
 } from "lucide-react";
+
 import Link from "next/link";
 import { Header } from "@/components/header";
 import api from "@/services/api";
@@ -24,20 +29,86 @@ interface Activity {
 
 const recentActivities: Activity[] = [];
 
+const getStatusLabel = (status: number) => {
+  switch (status) {
+    case 1:
+      return "Pendente";
+    case 2:
+      return "Aprovada";
+    case 3:
+      return "Rejeitada";
+    case 4:
+      return "Em andamento";
+    case 5:
+      return "Concluída";
+    default:
+      return "Desconhecido";
+  }
+};
+
+const getStatusIcon = (status: number) => {
+  switch (status) {
+    case 1: // Pendente
+      return <Clock className="h-6 w-6 text-gray-400 mt-1" />;
+    case 2: // Aprovada
+      return <Clock className="h-6 w-6 text-green-400 mt-1" />;
+    case 3: // Rejeitada 
+      return <XCircle className="h-6 w-6 text-red-500 mt-1" />;
+    case 4: // Em Andamento 
+      return <Clock className="h-6 w-6 text-yellow-400 mt-1" />;
+    case 5: // Concluída
+      return <CheckCircle className="h-6 w-6 text-green-700 mt-1" />;
+    default:
+      return <AlertCircle className="h-6 w-6 text-gray-500 mt-1" />;
+  }
+};
+
+const getStatusColor = (status: number) => {
+  switch (status) {
+    case 1:
+      return "text-gray-400 font-medium";
+    case 2:
+      return "text-green-400 font-medium";
+    case 3:
+      return "text-red-500 font-medium";
+    case 4:
+      return "text-yellow-400 font-medium";
+    case 5:
+      return "text-green-700 font-medium";
+    default:
+      return "text-gray-500";
+  }
+};
+
+
 export default function Home() {
   const [totalUsuarios, setTotalUsuarios] = useState<number>(0);
   const [totalApartamentos, setTotalApartamentos] = useState<number>(0);
   const [totalEntradas, setTotalEntradas] = useState<number>(0);
+
+  const getStatusColor = (status: string) => {
+  switch (status) {
+    case "Aprovada":
+      return "text-green-600 font-medium";
+    case "EmAndamento":
+      return "text-blue-600 font-medium";
+    case "Pendente":
+      return "text-yellow-600 font-medium";
+    default:
+      return "text-gray-500";
+  }
+};
+
 
 const [alertasRecentes, setAlertasRecentes] = useState<any[]>([]);
 
 useEffect(() => {
   const fetchAlertas = async () => {
     try {
-      const { data } = await api.get("/Notificacao/AlertasAtivosAdmin");
-      if (Array.isArray(data)) {
-        setAlertasRecentes(data);
-      }
+      const { data } = await api.get("/Notificacao/AlertasRecentesAdmin");
+if (Array.isArray(data)) {
+  setAlertasRecentes(data);
+}
     } catch (error) {
       console.error("Erro ao buscar notificações:", error);
     }
@@ -220,7 +291,7 @@ useEffect(() => {
     <div className="flex items-center justify-between">
       <CardTitle>Notificações Recentes</CardTitle>
       <Link
-        href="/notificacoes"
+        href="/notification/admin/all"
         className="text-sm text-blue-600 hover:underline"
       >
         Ver todas
@@ -234,42 +305,41 @@ useEffect(() => {
       </div>
     ) : (
       <div className="divide-y divide-gray-100">
-        {alertasRecentes.slice(0, 5).map((alerta) => (
-          <div
-            key={alerta.id}
-            className="flex items-center justify-between py-4 hover:bg-gray-50 rounded-lg transition"
-          >
-            {/* Esquerda: Ícone + Título + Data */}
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-6 w-6 text-red-500 mt-1" />
-              <div>
-                <p className="font-semibold text-gray-800 truncate max-w-[200px]">
-                  {alerta.titulo || "Alerta"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {new Date(alerta.dataCriacao).toLocaleDateString("pt-BR")} ·{" "}
-                  <span
-                    className={`${
-                      alerta.status === "Ativo"
-                        ? "text-green-600 font-medium"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {alerta.status}
-                  </span>
-                </p>
-              </div>
-            </div>
+  {alertasRecentes.slice(0, 5).map((alerta) => (
+    <div
+  key={alerta.id}
+  className="flex items-center justify-between py-4 hover:bg-gray-50 rounded-lg transition"
+>
+  {/* Esquerda: Ícone + Título + Data */}
+  <div className="flex items-start gap-3">
+    {getStatusIcon(alerta.status)}
+    <div>
+      <div className="flex items-center gap-2 min-w-0">
+  <span className="truncate flex-1">{alerta.titulo || "Alerta"}</span>
+  {alerta.status === 1 && (
+    <span className="px-2 py-0.5 text-xs font-medium text-yellow-800 bg-yellow-200 rounded-full whitespace-nowrap">
+      Ação necessária
+    </span>
+  )}
+</div>
 
-            {/* Direita: Botão Ver Detalhes */}
-            <Link href={`/notification/admin/details/${alerta.id}`}>
-              <Button variant="outline" size="sm">
-                Ver detalhes
-              </Button>
-            </Link>
-          </div>
-        ))}
-      </div>
+
+      <p className="text-xs text-gray-500">
+        {new Date(alerta.dataCriacao).toLocaleDateString("pt-BR")}
+      </p>
+    </div>
+  </div>
+
+  {/* Direita: Botão Ver Detalhes */}
+  <Link href={`/notification/admin/details/${alerta.id}`}>
+    <Button variant="outline" size="sm">
+      Ver detalhes
+    </Button>
+  </Link>
+</div>
+
+  ))}
+</div>
     )}
   </CardContent>
 </Card>

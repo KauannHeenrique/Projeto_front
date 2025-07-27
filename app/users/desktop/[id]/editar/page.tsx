@@ -156,7 +156,6 @@ export default function EditUser() {
   setApiError(null);
 
   // Se não for funcionário, forçar busca do apartamento antes de enviar
-  // Se não for funcionário, buscar apartamento automaticamente
 if (formData.accessLevel !== "funcionario") {
   if (!bloco.trim() || !numero.trim()) {
     setIsLoading(false);
@@ -393,15 +392,40 @@ const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
         </Button>
 
         <Button
-          type="button" // ✅ Não dispara submit automaticamente
-          onClick={() => setMostrarPopupSalvar(true)}
-          disabled={isLoading}
-          variant="ghost"
-          className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
-        >
-          <FiSave size={16} />
-          {isLoading ? "Salvando..." : "Salvar"}
-        </Button>
+  type="button"
+  onClick={async () => {
+    if (formData.accessLevel !== "funcionario") {
+      if (!bloco.trim() || !numero.trim()) {
+        setApiError("Informe o bloco e número do apartamento.");
+        return;
+      }
+
+      try {
+        const { data } = await api.get("/Apartamento/BuscarApartamentoPor", {
+          params: { bloco: bloco.trim().toUpperCase(), numero: numero.trim() },
+        });
+
+        if (Array.isArray(data) && data.length > 0) {
+          setFormData((prev) => ({ ...prev, apartmentId: data[0].id.toString() }));
+          setMostrarPopupSalvar(true);
+        } else {
+          setApiError("Apartamento não encontrado. Verifique os dados informados.");
+        }
+      } catch {
+        setApiError("Erro ao buscar apartamento. Tente novamente.");
+      }
+    } else {
+      setMostrarPopupSalvar(true);
+    }
+  }}
+  disabled={isLoading}
+  variant="ghost"
+  className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+>
+  <FiSave size={16} />
+  {isLoading ? "Salvando..." : "Salvar"}
+</Button>
+
        
 
       </div>

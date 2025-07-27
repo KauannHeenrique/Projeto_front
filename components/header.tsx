@@ -17,7 +17,9 @@ import {
   LogOut,
   Menu,
   Settings,
-  X
+  X, 
+  PlusIcon,
+  BellPlusIcon
 } from "lucide-react"
 import Cookies from "js-cookie"
 
@@ -41,18 +43,24 @@ export function Header() {
           </Link>
 
           {/* Desktop buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link href="/report" className="text-sm font-medium text-gray-700 hover:text-[#26c9a8] flex items-center">
-              <FiFileText className="h-4 w-4 mr-2" />
-              Relatórios
-            </Link>
+<div className="hidden md:flex items-center space-x-8">
+  <Link
+    href="/report"
+    className="text-sm font-medium text-gray-700 hover:text-[#26c9a8] flex items-center"
+  >
+    <FiFileText className="h-4 w-4 mr-2" />
+    Relatórios
+  </Link>
 
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                3
-              </span>
-            </Button>
+  <Link
+    href="/notification/admin/add"
+    className="text-sm font-medium text-gray-700 hover:text-[#26c9a8] flex items-center gap-2"
+  >
+    <BellPlusIcon size={18} />
+    Notificação
+  </Link>
+
+
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

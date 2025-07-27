@@ -47,7 +47,6 @@ export default function AddUser() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [tipoCadastro, setTipoCadastro] = useState<"morador" | "visitante" | "">("");
-
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -66,23 +65,9 @@ export default function AddUser() {
     }
   }, [formData.accessLevel]);
 
-  const isValidCPF = (cpf: string): boolean => {
-    const digits = cpf.replace(/\D/g, "");
-    if (digits.length !== 11 || /^(\d)\1+$/.test(digits)) return false;
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i);
-    let firstDigit = (sum * 10) % 11;
-    if (firstDigit === 10) firstDigit = 0;
-    if (firstDigit !== parseInt(digits[9])) return false;
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(digits[i]) * (11 - i);
-    let secondDigit = (sum * 10) % 11;
-    if (secondDigit === 10) secondDigit = 0;
-    return secondDigit === parseInt(digits[10]);
-  };
-
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
+
     if (!formData.name.trim()) newErrors.name = "O nome é obrigatório.";
     else if (formData.name.length < 2) newErrors.name = "O nome deve ter pelo menos 2 caracteres.";
 
@@ -95,14 +80,7 @@ export default function AddUser() {
     if (!phoneDigits) newErrors.phone = "O telefone é obrigatório.";
     else if (!phoneRegex.test(phoneDigits)) newErrors.phone = "Telefone inválido.";
 
-    const documentDigits = formData.document.replace(/\D/g, "");
-    const rgRegex = /^[a-zA-Z0-9]{1,12}$/;
-    if (!formData.document.trim()) newErrors.document = "O documento é obrigatório.";
-    else if (documentDigits.length === 11 && !isValidCPF(formData.document)) {
-      newErrors.document = "CPF inválido.";
-    } else if (documentDigits.length !== 11 && !rgRegex.test(documentDigits)) {
-      newErrors.document = "RG inválido.";
-    }
+    if (!formData.document.trim()) newErrors.document = "O CPF é obrigatório.";
 
     const validAccessLevels = ["funcionario", "sindico", "morador"];
     if (!validAccessLevels.includes(formData.accessLevel)) newErrors.accessLevel = "Selecione um nível válido.";
@@ -280,85 +258,84 @@ export default function AddUser() {
             )}
 
             <form onSubmit={handleSubmit} id="addUserForm" className="space-y-6">
-  {/* Nome e Email */}
-  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-    <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
-      <Input
-        id="name"
-        name="name"
-        placeholder="Nome completo"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        disabled={isLoading}
-        required
-      />
-    </div>
-    <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
-      <Input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="usuario@condominio.com"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        disabled={isLoading}
-        required
-      />
-    </div>
-  </div>
+              {/* Nome e Email */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <div className="flex flex-col w-full sm:w-1/2">
+                  <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="Nome completo"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col w-full sm:w-1/2">
+                  <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="usuario@condominio.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+              </div>
 
-  {/* Telefone e Documento */}
-  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-    <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
-      <Input
-        id="phone"
-        name="phone"
-        placeholder="(99) 99999-9999"
-        value={formData.phone}
-        onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-        disabled={isLoading}
-        required
-      />
-    </div>
-    <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="document" className="mb-2 font-medium text-gray-700">Documento (CPF)</label>
-      <Input
-        id="document"
-        name="document"
-        placeholder="000.000.000-00"
-        value={formData.document}
-        onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
-        disabled={isLoading}
-        required
-      />
-    </div>
-  </div>
+              {/* Telefone e CPF */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <div className="flex flex-col w-full sm:w-1/2">
+                  <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    placeholder="(99) 99999-9999"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col w-full sm:w-1/2">
+                  <label htmlFor="document" className="mb-2 font-medium text-gray-700">CPF</label>
+                  <Input
+                    id="document"
+                    name="document"
+                    placeholder="000.000.000-00"
+                    value={formData.document}
+                    onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+              </div>
 
-  {/* Nível de Acesso */}
-  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-    <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
-      <select
-        id="accessLevel"
-        name="accessLevel"
-        value={formData.accessLevel}
-        onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
-        disabled={isLoading}
-        required
-        className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
-      >
-        <option value="">Selecione</option>
-        <option value="funcionario">Funcionário</option>
-        <option value="morador">Morador</option>
-        <option value="sindico">Síndico</option>
-      </select>
-    </div>
+              {/* Nível de Acesso */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <div className="flex flex-col w-full sm:w-1/2">
+                  <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
+                  <select
+                    id="accessLevel"
+                    name="accessLevel"
+                    value={formData.accessLevel}
+                    onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
+                    disabled={isLoading}
+                    required
+                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="funcionario">Funcionário</option>
+                    <option value="morador">Morador</option>
+                    <option value="sindico">Síndico</option>
+                  </select>
+                </div>
 
-
-  {formData.accessLevel && formData.accessLevel !== "funcionario" && (
+                {formData.accessLevel && formData.accessLevel !== "funcionario" && (
                   <div className="flex flex-col w-full sm:w-1/2">
                     <label className="mb-2 font-medium text-gray-700">Bloco e Número</label>
                     <div className="flex gap-2">
@@ -379,35 +356,34 @@ export default function AddUser() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* RFID */}
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex flex-col w-full sm:w-1/2">
+                  <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="codigoRFID"
+                      name="codigoRFID"
+                      placeholder="Ex: ABCD1234"
+                      value={formData.codigoRFID}
+                      readOnly
+                      required
+                      className="border border-gray-300 focus:border-indigo-500 flex-grow"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleReadRFID}
+                      disabled={isLoading}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
+                    >
+                      {isLoading ? "Lendo..." : "Ler RFID"}
+                    </Button>
                   </div>
-
-  {/* RFID */}
-  <div className="flex flex-col sm:flex-row gap-4 items-end">
-    <div className="flex flex-col w-full sm:w-1/2">
-      <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
-      <div className="flex gap-2">
-        <Input
-          id="codigoRFID"
-          name="codigoRFID"
-          placeholder="Ex: ABCD1234"
-          value={formData.codigoRFID}
-          readOnly
-          required
-          className="border border-gray-300 focus:border-indigo-500 flex-grow"
-        />
-        <Button
-          type="button"
-          onClick={handleReadRFID}
-          disabled={isLoading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2"
-        >
-          {isLoading ? "Lendo..." : "Ler RFID"}
-        </Button>
-      </div>
-    </div>
-  </div>
-</form>
-
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

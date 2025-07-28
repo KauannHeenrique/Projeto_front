@@ -57,3 +57,10 @@ export function formatTimeOnly(value: string): string {
     minute: "2-digit"
   });
 }
+
+export function formatTimeBrazil(dateString: string): string {
+  const date = new Date(dateString);
+  const hora = String(date.getHours()).padStart(2, "0");
+  const minuto = String(date.getMinutes()).padStart(2, "0");
+  return `${hora}h${minuto}`;
+}

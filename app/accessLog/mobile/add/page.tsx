@@ -170,24 +170,13 @@ const [cpfMorador, setCpfMorador] = useState("");
         </Button>
 
         <div className="flex items-center gap-2">
-          {tipo && (
-            <Button
-              type="button"
-              onClick={() => {
-                setTipo("");
-                setDocumento("");
-                setMensagem("");
-                setObservacao("");
-                setMorador(null);
-                setVisitante(null);
-                setListaVisitantes([]);
-              }}
-              variant="outline"
-              className="text-sm"
-            >
-              Alterar tipo de cadastro
-            </Button>
-          )}
+          <Button
+      onClick={salvarEntradaVisitante}
+      className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2 mt-4"
+    >
+      <FiSave size={16} />
+      Registrar
+    </Button>
 
           
         </div>

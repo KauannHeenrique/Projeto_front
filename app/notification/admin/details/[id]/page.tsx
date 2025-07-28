@@ -360,7 +360,7 @@ export default function NotificacaoDetalhes() {
 
               {notificacao.status === 3 ? (
                 <div className="flex items-center gap-2 text-red-500 font-bold">
-                  → ● Rejeitada
+                  ● Rejeitada
                 </div>
               ) : (
                 <>
@@ -421,81 +421,108 @@ export default function NotificacaoDetalhes() {
       <h2 className="text-lg font-bold mb-4 text-center">Alterar Status</h2>
 
       {(notificacao.status === 3 || notificacao.status === 5) ? (
-  <div className="text-center text-red-600 font-medium text-sm py-4">
-    {notificacao.status === 3
-      ? "Não é possível alterar o status de uma notificação rejeitada."
-      : "Não é possível alterar o status de uma notificação concluída."}
-  </div>
-) : (
-  <>
-    {/* Comentário */}
-    <textarea
-      className="w-full border rounded-md p-2 text-sm mb-4"
-      placeholder="Adicione um comentário (opcional)"
-      value={comentarioStatus}
-      onChange={(e) => setComentarioStatus(e.target.value)}
-    />
-
-    {/* Botões de ação (dinâmicos) */}
-    <div className="flex flex-col gap-3">
-      {notificacao.status === 1 && (
-        <div className="flex gap-3">
-          <Button className="bg-red-600 hover:bg-red-700 text-white flex-1" onClick={() => setAcaoSelecionada("rejeitar")}>
-            Rejeitar
-          </Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white flex-1" onClick={() => setAcaoSelecionada("aprovar")}>
-            Aprovar
-          </Button>
+        <div className="text-center text-red-600 font-medium text-sm py-4">
+          {notificacao.status === 3
+            ? "Não é possível alterar o status de uma notificação rejeitada."
+            : "Não é possível alterar o status de uma notificação concluída."}
         </div>
+      ) : (
+        <>
+          {/* Comentário */}
+          <textarea
+            className="w-full border rounded-md p-2 text-sm mb-4"
+            placeholder="Adicione um comentário (opcional)"
+            value={comentarioStatus}
+            onChange={(e) => setComentarioStatus(e.target.value)}
+          />
+
+          {/* Botões de ação (dinâmicos) */}
+          <div className="flex flex-col gap-3">
+            {notificacao.status === 1 && (
+              <div className="flex gap-3">
+                <Button
+                  className="bg-red-600 hover:bg-red-700 text-white flex-1"
+                  onClick={() => setAcaoSelecionada("rejeitar")}
+                >
+                  Rejeitar
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                  onClick={() => setAcaoSelecionada("aprovar")}
+                >
+                  Aprovar
+                </Button>
+              </div>
+            )}
+
+            {notificacao.status === 2 && (
+              <div className="flex gap-3">
+                <Button
+                  className="bg-gray-500 hover:bg-gray-600 text-white flex-1"
+                  onClick={() => setAcaoSelecionada("voltar")}
+                >
+                  Voltar
+                </Button>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+                  onClick={() => setAcaoSelecionada("em_andamento")}
+                >
+                  Em andamento
+                </Button>
+              </div>
+            )}
+
+            {notificacao.status === 4 && (
+              <div className="flex gap-3">
+                <Button
+                  className="bg-gray-500 hover:bg-gray-600 text-white flex-1"
+                  onClick={() => setAcaoSelecionada("voltar")}
+                >
+                  Voltar
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                  onClick={() => setAcaoSelecionada("concluir")}
+                >
+                  Concluir
+                </Button>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      {notificacao.status === 2 && (
-        <div className="flex gap-3">
-          <Button className="bg-gray-500 hover:bg-gray-600 text-white flex-1" onClick={() => setAcaoSelecionada("voltar")}>
-            Voltar
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex-1" onClick={() => setAcaoSelecionada("em_andamento")}>
-            Em andamento
-          </Button>
-        </div>
-      )}
-
-      {notificacao.status === 4 && (
-        <div className="flex gap-3">
-          <Button className="bg-gray-500 hover:bg-gray-600 text-white flex-1" onClick={() => setAcaoSelecionada("voltar")}>
-            Voltar
-          </Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white flex-1" onClick={() => setAcaoSelecionada("concluir")}>
-            Concluir
-          </Button>
-        </div>
-      )}
-    </div>
-  </>
-)}
-
-
-
-
-      {/* Botão Confirmar */}
+      {/* Botões finais */}
       <div className="mt-6 flex justify-center gap-2">
-        <Button
-  className="bg-red-500 hover:bg-red-900 text-white"
-          onClick={() => setShowAlterarStatus(false)}
-        >
-          Cancelar
-        </Button>
-        <Button
-  className="bg-green-500 hover:bg-green-700 text-white"
-  disabled={!acaoSelecionada}
-  onClick={handleConfirmarStatus}
->
-  Confirmar
-</Button>
+        {notificacao.status === 3 || notificacao.status === 5 ? (
+          <Button
+            className="bg-gray-500 hover:bg-gray-800 text-white"
+            onClick={() => setShowAlterarStatus(false)}
+          >
+            Fechar
+          </Button>
+        ) : (
+          <>
+            <Button
+              className="bg-red-500 hover:bg-red-900 text-white"
+              onClick={() => setShowAlterarStatus(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-green-500 hover:bg-green-700 text-white"
+              disabled={!acaoSelecionada}
+              onClick={handleConfirmarStatus}
+            >
+              Confirmar
+            </Button>
+          </>
+        )}
       </div>
     </div>
   </div>
 )}
+
 
 
   {/* Aba COMENTÁRIOS */}

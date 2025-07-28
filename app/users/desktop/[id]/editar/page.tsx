@@ -9,6 +9,7 @@ import { BsChevronDoubleLeft } from "react-icons/bs";
 import { formatCPF, formatPhone, cleanDocument } from "@/services/formatValues";
 import api from "@/services/api";
 import rfid from "@/services/rfid_url";
+import { DeletePopup, EditPopup, ResetPasswordPopup } from "@/services/popUps";
 
 
 interface FormData {
@@ -64,9 +65,6 @@ export default function EditUser() {
 }
 
 };
-
-
-  
 
   useEffect(() => {
   const fetchUser = async () => {
@@ -229,6 +227,8 @@ telefone: cleanDocument(formData.phone),
 // POP UP para remover usuário
 const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
 const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
+const [mostrarPopupResetSenha, setMostrarPopupResetSenha] = useState(false);
+
 
 
   return (
@@ -252,132 +252,14 @@ const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
         
         <Button
           type="button"
-          onClick={handleResetPassword}
+          onClick={() => setMostrarPopupResetSenha(true)}
           disabled={isLoading}
           variant="ghost"
-        className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+          className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
         >
           <FiRefreshCw size={16} />
           Redefinir Senha
         </Button>
-
-        {mostrarPopupExcluir && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-      {/* Botão fechar */}
-      <button
-        onClick={() => setMostrarPopupExcluir(false)}
-        className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
-      >
-        ×
-      </button>
-
-      <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center justify-center gap-2">
-      <FiAlertTriangle size={20} className="text-red-600" />
-      Confirmar exclusão
-      <FiAlertTriangle size={20} className="text-red-600" />
-      </h2>
-
-      <p className="text-sm text-center text-gray-700 mb-6">
-        Tem certeza que deseja excluir este usuário? Essa ação não pode ser desfeita.
-      </p>
-
-      <div className="flex justify-center gap-4">
-        <Button
-          onClick={() => setMostrarPopupExcluir(false)}
-          className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded"
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={async () => {
-            try {
-              await api.delete(`/Usuario/ExcluirUsuario/${id}`);
-              setApiError("Usuário excluído com sucesso.");
-              setMostrarPopupExcluir(false);
-              setTimeout(() => router.push("/users/desktop"), 900);
-            } catch (err: any) {
-              const msg = err?.response?.data?.mensagem || "Erro ao excluir o usuário.";
-              console.error("Erro ao excluir:", msg);
-              setApiError(msg);
-            }
-          }}
-          className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded"
-        >
-          Confirmar
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-{mostrarPopupSalvar && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-      {/* Botão fechar */}
-      <button
-        onClick={() => setMostrarPopupSalvar(false)}
-        className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
-      >
-        ×
-      </button>
-
-      <h2 className="text-lg font-semibold mb-4 text-black-600 flex items-center justify-center gap-2">
-      Confirmar edição?
-      </h2>
-
-      
-
-      <div className="flex justify-center gap-4">
-        <Button
-          onClick={() => setMostrarPopupSalvar(false)}
-          className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded"
-        >
-          Cancelar
-        </Button>
-        <Button
-  onClick={async () => {
-    try {
-      const nivelAcessoMap = { sindico: 2, funcionario: 3, morador: 4 };
-
-      const usuario = {
-        usuarioId: Number(id),
-        nome: formData.name,
-        documento: cleanDocument(formData.document),
-        email: formData.email,
-        telefone: cleanDocument(formData.phone),
-        nivelAcesso: nivelAcessoMap[formData.accessLevel],
-        apartamentoId:
-          formData.accessLevel === "funcionario"
-            ? null
-            : parseInt(formData.apartmentId) || null,
-        codigoRFID: formData.codigoRFID || null,
-        status: formData.status === "ativo",
-      };
-
-      await api.put(`/Usuario/AtualizarUsuario/${id}`, usuario, {
-        headers: { "Content-Type": "application/json" },
-      });
-
-      setApiError("Usuário atualizado com sucesso!");
-      setMostrarPopupSalvar(false);
-      setTimeout(() => router.push("/users/desktop"), 900);
-    } catch (err: any) {
-      const msg = err?.response?.data?.mensagem || "Erro ao salvar alterações.";
-      console.error("Erro ao salvar:", msg);
-      setApiError(msg);
-      setMostrarPopupSalvar(false); // ✅ Fechar modal mesmo com erro
-    }
-  }}
-  className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
->
-  Confirmar
-</Button>
-      </div>
-    </div>
-  </div>
-)}
 
 
         <Button
@@ -430,6 +312,80 @@ const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
 
       </div>
     </div>
+
+    {/* Popups reutilizáveis */}
+<DeletePopup
+  isOpen={mostrarPopupExcluir}
+  onClose={() => setMostrarPopupExcluir(false)}
+  onConfirm={async () => {
+    try {
+      await api.delete(`/Usuario/ExcluirUsuario/${id}`);
+      setApiError("Usuário excluído com sucesso.");
+      setMostrarPopupExcluir(false);
+      setTimeout(() => router.push("/users/desktop"), 900);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao excluir o usuário.";
+      console.error("Erro ao excluir:", msg);
+      setApiError(msg);
+    }
+  }}
+/>
+
+<EditPopup
+  isOpen={mostrarPopupSalvar}
+  onClose={() => setMostrarPopupSalvar(false)}
+  onConfirm={async () => {
+    try {
+      const nivelAcessoMap = { sindico: 2, funcionario: 3, morador: 4 };
+
+      const usuario = {
+        usuarioId: Number(id),
+        nome: formData.name,
+        documento: cleanDocument(formData.document),
+        email: formData.email,
+        telefone: cleanDocument(formData.phone),
+        nivelAcesso: nivelAcessoMap[formData.accessLevel],
+        apartamentoId:
+          formData.accessLevel === "funcionario"
+            ? null
+            : parseInt(formData.apartmentId) || null,
+        codigoRFID: formData.codigoRFID || null,
+        status: formData.status === "ativo",
+      };
+
+      await api.put(`/Usuario/AtualizarUsuario/${id}`, usuario, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      setApiError("Usuário atualizado com sucesso!");
+      setMostrarPopupSalvar(false);
+      setTimeout(() => router.push("/users/desktop"), 900);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao salvar alterações.";
+      console.error("Erro ao salvar:", msg);
+      setApiError(msg);
+      setMostrarPopupSalvar(false);
+    }
+  }}
+/>
+
+<ResetPasswordPopup
+  isOpen={mostrarPopupResetSenha}
+  onClose={() => setMostrarPopupResetSenha(false)}
+  onConfirm={async () => {
+    try {
+      await api.put(`/Usuario/ResetarSenha/${id}`);
+      setApiError("Senha redefinida com sucesso!");
+      setMostrarPopupResetSenha(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao redefinir a senha.";
+      console.error("Erro ao redefinir senha:", msg);
+      setApiError(msg);
+    }
+  }}
+/>
+
+
 
     {/* Conteúdo da página */}
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

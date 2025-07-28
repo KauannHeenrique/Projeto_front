@@ -199,7 +199,7 @@ export default function AddUser() {
           </div>
 
           <div className="max-w-2xl mx-auto px-4 py-6">
-            <h1 className="text-xl font-bold text-center mb-6">Cadastrar Usuário</h1>
+            <h1 className="text-xl font-bold text-center mb-6">Novo cadastro</h1>
             <p className="text-gray-700 font-medium text-lg text-center mb-4">Deseja cadastrar um:</p>
 
             <div className="flex gap-6 justify-center">
@@ -243,7 +243,7 @@ export default function AddUser() {
                 className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
               >
                 <FiSave size={16} />
-                {isLoading ? "Salvando..." : "Adicionar"}
+                {isLoading ? "Cadastrando..." : "Cadastrar"}
               </Button>
             </div>
           </div>
@@ -368,10 +368,11 @@ export default function AddUser() {
                       name="codigoRFID"
                       placeholder="Ex: ABCD1234"
                       value={formData.codigoRFID}
-                      readOnly
                       required
+                      onChange={() => {}} // impede alteração manual
                       className="border border-gray-300 focus:border-indigo-500 flex-grow"
                     />
+
                     <Button
                       type="button"
                       onClick={handleReadRFID}

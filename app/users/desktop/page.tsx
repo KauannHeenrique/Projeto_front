@@ -4,7 +4,7 @@
   import { Button } from "@/components/ui/button";
   import { Input } from "@/components/ui/input";
   import { useRouter } from "next/navigation";
-  import { FiSearch, FiFileText } from "react-icons/fi";
+  import { FiSearch, FiFileText, FiUser } from "react-icons/fi";
   import { FaFilter, FaSearch } from "react-icons/fa";
   import { BsChevronDoubleLeft } from "react-icons/bs";
   import { FiUserPlus, FiUsers} from "react-icons/fi";
@@ -148,7 +148,7 @@ const buscarTodosVisitantes = async () => {
       const { data } = await api.get(`/Visitante/ExibirTodosVisitantes`);
 
       if (data.length === 0) {
-        setMensagemErroVisitante("Nenhum visitante encontrado.");
+        setMensagemErroVisitante("");
       } else {
         // Atualizando o estado corretamente
         const mappedVisitantes: Visitante[] = data.map((visitante: any) => ({
@@ -571,15 +571,32 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 <div className="flex justify-center">
   <Button
     className="bg-[#217346] hover:bg-[#1a5c38] text-white px-4 py-2 text-sm rounded"
-    onClick={() => {
-      const link = document.createElement("a");
-      link.href = `${api.defaults.baseURL}/relatorios/${abaAtiva}`;
-      link.setAttribute("download", `Relatorio_${abaAtiva}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setMostrarPopupRelatorio(false);
-    }}
+   onClick={async () => {
+  try {
+    const response = await api.post(
+      "/relatorios/multiplos",
+      {
+        Usuarios: true,
+        Visitantes: true
+      },
+      { responseType: "blob" } // ESSENCIAL para baixar arquivo binário
+    );
+
+    // Cria link para download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Relatorio_Usuarios_Visitantes.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setMostrarPopupRelatorio(false);
+  } catch (error) {
+    console.error("Erro ao baixar relatório:", error);
+  }
+}}
+
   >
     Baixar Excel
   </Button>
@@ -594,7 +611,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     onClick={() => router.push("/users/desktop/adicionar")}
               className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 text-sm rounded font-semibold"
   >
-    <FiUserPlus size={16} /> Adicionar usuário
+    <FiUserPlus size={16} /> Cadastrar
   </Button>
 
           </div>

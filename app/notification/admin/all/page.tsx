@@ -8,6 +8,7 @@ import { FaSearch } from "react-icons/fa";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import api from "@/services/api";
 import { Loader, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
+import { FiBell } from "react-icons/fi";
 
 // Interfaces
 interface Notificacao {
@@ -17,6 +18,8 @@ interface Notificacao {
   tipo: number;
   status: number;
   dataCriacao: string;
+  bloco?: string;       // Novo
+  apartamento?: string; // Novo
 }
 
 // Status & Tipos
@@ -202,7 +205,19 @@ export default function TodasNotificacoesPage() {
 
       {/* CONTEÚDO */}
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-        <h1 className="text-xl font-bold mb-4">Notificações</h1>
+        <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
+                    Notificações
+                  </h1>
+                  <Button
+                    onClick={exibirTodas}
+                    type="button"
+                    variant="ghost"
+                    className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+                  >
+                    <FiBell size={16} /> Exibir todas as notificações
+                  </Button>
+                </div>
 
         {/* FILTROS */}
         <div className="bg-white rounded-lg shadow p-4 space-y-4">
@@ -285,15 +300,6 @@ export default function TodasNotificacoesPage() {
             </div>
           )}
 
-          {!exibindoTodas && (
-  <Button
-    onClick={exibirTodas}
-    variant="outline"
-    className="w-full border-[#167f6c] text-[#167f6c] hover:bg-[#167f6c15]"
-  >
-    Exibir todas as notificações
-  </Button>
-)}
 
           {erro && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
@@ -315,40 +321,47 @@ export default function TodasNotificacoesPage() {
                 Nenhuma notificação encontrada.
               </p>
             ) : (
-              notificacoes.map((n) => (
-                <div
-                  key={n.id}
-                  className="bg-white rounded-lg shadow p-4 flex justify-between items-center hover:bg-gray-50 transition"
-                >
-                  <div className="flex items-start gap-3">
-                    {getStatusIcon(n.status)}
-                    <div>
-                      <p className="font-semibold text-gray-800 truncate max-w-[200px]">
-                        {n.titulo || "Alerta"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(n.dataCriacao).toLocaleDateString("pt-BR")} {" "}
-                      </p>
-                      {n.status === 1 && (
-                        <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full mt-1">
-                          • Ação necessária
-                        </span>
-                      )}
-                    </div>
-                  </div>
+  notificacoes.map((n) => (
+    <div
+      key={n.id}
+      className="bg-white rounded-lg shadow p-4 flex justify-between items-center hover:bg-gray-50 transition"
+    >
+      <div className="flex flex-col">
+        {/* Badge acima */}
+        {n.status === 1 && (
+          <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full mb-1 w-fit">
+            • Ação necessária
+          </span>
+        )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      router.push(`/notification/admin/details/${n.id}`)
-                    }
-                  >
-                    Ver detalhes
-                  </Button>
-                </div>
-              ))
-            )}
+        {/* Ícone + Título */}
+        <div className="flex items-center gap-2">
+          {getStatusIcon(n.status)}
+          <p className="font-semibold text-gray-800 truncate max-w-[200px]">
+            {n.titulo || "Alerta"}
+          </p>
+        </div>
+
+        {/* Data + Bloco e Apartamento */}
+        <p className="text-xs text-gray-500 mt-1">
+          {new Date(n.dataCriacao).toLocaleDateString("pt-BR")}
+          {n.origem?.bloco || n.origem?.apartamento ? (
+            <> • Bloco: {n.origem?.bloco || "-"} | Apto: {n.origem?.apartamento || "-"}</>
+          ) : null}
+        </p>
+      </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => router.push(`/notification/admin/details/${n.id}`)}
+      >
+        Ver detalhes
+      </Button>
+    </div>
+  ))
+)
+}
 
             {temMais && (
               <Button

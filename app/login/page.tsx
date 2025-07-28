@@ -11,6 +11,8 @@ import Link from "next/link"
 import { validate } from "@/lib/validate_login"
 import api from "@/services/api";
 import { cleanDocument } from "@/services/formatValues"; 
+import Swal from 'sweetalert2';
+
 
 export default function LoginPage() {
   const [documento, setDocumento] = useState("")
@@ -53,10 +55,16 @@ export default function LoginPage() {
     );
 
     if (data.redirectTo) {
-      alert(data.mensagem);
-      router.push(data.redirectTo);
-      return;
-    }
+  await Swal.fire({
+    title: 'Primeiro acesso',
+    text: data.mensagem,
+    confirmButtonText: 'Alterar Agora',
+    confirmButtonColor: '#26c9a8'
+  });
+  router.push(data.redirectTo);
+  return;
+}
+
 
     router.push("/home");
   } catch (err: any) {

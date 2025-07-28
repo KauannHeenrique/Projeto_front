@@ -63,7 +63,7 @@ export default function AddVisitor() {
 
       await api.post("Visitante/CadastrarVisitante", body);
       setMensagem("Visitante cadastrado com sucesso!");
-      setTimeout(() => router.push("/users"), 2000);
+      setTimeout(() => router.push("/users/desktop"), 1000);
     } catch (err: any) {
       const msg = err?.response?.data?.mensagem || "Erro ao cadastrar visitante.";
       setMensagem(msg);
@@ -94,7 +94,7 @@ export default function AddVisitor() {
             className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white flex items-center gap-2 text-sm"
           >
             <FiSave size={16} />
-            {isLoading ? "Salvando..." : "Cadastrar"}
+            {isLoading ? "Cadastrando..." : "Cadastrar"}
           </Button>
         </div>
       </div>
@@ -109,95 +109,92 @@ export default function AddVisitor() {
         )}
 
         <form onSubmit={handleSubmit} id="visitorForm" className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-            <div className="w-full">
-              <label className="block text-sm font-medium mb-1">Nome</label>
-<Input
-  placeholder="Nome completo"
-  value={nome}
-  onChange={(e) => setNome(e.target.value)}
-  disabled={isLoading}
-/>
-            </div>
-            <div className="w-full">
-              <label className="block text-sm font-medium mb-1">Documento (CPF)</label>
-<Input
-  placeholder="000.000.000-00"
-  value={documento}
-  onChange={(e) => {
-    const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove não numéricos
-    setDocumento(formatCPF(onlyNumbers));
-  }}
-  disabled={isLoading}
-  inputMode="numeric" // Teclado numérico no mobile
- 
-/>
-
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:gap-6 sm:items-end">
-  {/* Campo telefone com largura igual a Nome */}
-  <div className="w-full sm:w-1/2">
-    <label className="block text-sm font-medium mb-1">Telefone</label>
-    <Input
-  placeholder="(99) 99999-9999"
-  value={telefone}
-  onChange={(e) => {
-    const onlyNumbers = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
-    setTelefone(formatPhone(onlyNumbers));
-  }}
-  disabled={isLoading}
-  inputMode="numeric" // Mostra teclado numérico no mobile
-
-/>
-
-
+  <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+    <div className="w-full">
+      <label className="block text-sm font-medium mb-1">Nome *</label>
+      <Input
+        placeholder="Nome completo"
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        disabled={isLoading}
+        required
+      />
+    </div>
+    <div className="w-full">
+      <label className="block text-sm font-medium mb-1">Documento (CPF) *</label>
+      <Input
+        placeholder="000.000.000-00"
+        value={documento}
+        onChange={(e) => {
+          const onlyNumbers = e.target.value.replace(/\D/g, "");
+          setDocumento(formatCPF(onlyNumbers));
+        }}
+        disabled={isLoading}
+        inputMode="numeric"
+        required
+      />
+    </div>
   </div>
 
-  {/* Checkbox alinhado à direita */}
- <div className="h-10 flex justify-center items-center">
-  <div className="flex items-center gap-2">
-    <input
-      type="checkbox"
-      id="prestador"
-      checked={isPrestador}
-      onChange={(e) => setIsPrestador(e.target.checked)}
-      disabled={isLoading}
-      className="w-4 h-4"
-    />
-    <label htmlFor="prestador" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-      É prestador de serviço?
-    </label>
+  <div className="flex flex-col sm:flex-row sm:gap-6 sm:items-end">
+    <div className="w-full sm:w-1/2">
+      <label className="block text-sm font-medium mb-1">Telefone *</label>
+      <Input
+        placeholder="(99) 99999-9999"
+        value={telefone}
+        onChange={(e) => {
+          const onlyNumbers = e.target.value.replace(/\D/g, "");
+          setTelefone(formatPhone(onlyNumbers));
+        }}
+        disabled={isLoading}
+        inputMode="numeric"
+        required
+      />
+    </div>
+
+    <div className="h-10 flex justify-center items-center">
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="prestador"
+          checked={isPrestador}
+          onChange={(e) => setIsPrestador(e.target.checked)}
+          disabled={isLoading}
+          className="w-4 h-4"
+        />
+        <label htmlFor="prestador" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+          É prestador de serviço?
+        </label>
+      </div>
+    </div>
   </div>
-</div>
 
-</div>
+  {isPrestador && (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-1">Nome da empresa *</label>
+        <Input
+          placeholder="Nome da empresa"
+          value={empresa}
+          onChange={(e) => setEmpresa(e.target.value)}
+          disabled={isLoading}
+          required={isPrestador}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">CNPJ *</label>
+        <Input
+          placeholder="00.000.000/0000-00"
+          value={cnpj}
+          onChange={(e) => setCnpj(formatCpfOrCnpj(e.target.value))}
+          disabled={isLoading}
+          required={isPrestador}
+        />
+      </div>
+    </div>
+  )}
+</form>
 
-
-          {isPrestador && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome da empresa</label>
-<Input
-  placeholder="Nome da empresa"
-  value={empresa}
-  onChange={(e) => setEmpresa(e.target.value)}
-  disabled={isLoading}
-/>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">CNPJ</label>
-<Input
-  placeholder="00.000.000/0000-00"
-  value={cnpj}
-  onChange={(e) => setCnpj(formatCpfOrCnpj(e.target.value))}
-  disabled={isLoading}
-/>
-              </div>
-            </div>
-          )}
-        </form>
       </div>
     </div>
   );

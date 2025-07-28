@@ -25,6 +25,8 @@ interface Activity {
   description: string;
   time: string;
   status: "success" | "error";
+  bloco?: string | null;        
+  apartamento?: string | null;  
 }
 
 const recentActivities: Activity[] = [];
@@ -323,10 +325,12 @@ useEffect(() => {
   )}
 </div>
 
-
-      <p className="text-xs text-gray-500">
-        {new Date(alerta.dataCriacao).toLocaleDateString("pt-BR")}
-      </p>
+        <p className="text-xs text-gray-500">
+          {new Date(alerta.dataCriacao).toLocaleDateString("pt-BR")}
+          {alerta.origem.bloco && alerta.origem.apartamento
+            ? ` - Bloco ${alerta.origem.bloco} | Apto ${alerta.origem.apartamento}`
+            : ""}
+        </p>
     </div>
   </div>
 

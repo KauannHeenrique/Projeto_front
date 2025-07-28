@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { FiSave, FiTrash2 } from "react-icons/fi";
 import api from "@/services/api";
+import { DeletePopup, EditPopup } from "@/services/popUps";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -22,6 +23,9 @@ import {
 export default function EditApartmentPage() {
   const router = useRouter();
   const { id } = useParams();
+
+  const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
+  const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
 
   const [bloco, setBloco] = useState("");
   const [numero, setNumero] = useState("");
@@ -112,7 +116,7 @@ router.push("/apartaments/desktop");
       <div className="flex gap-4">
         <Button
           type="button"
-          onClick={handleExcluir}
+          onClick={() => setMostrarPopupExcluir(true)} // ✅ Abre popup de exclusão
           disabled={isLoading}
           variant="ghost"
           className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1"
@@ -121,15 +125,62 @@ router.push("/apartaments/desktop");
           Remover apartamento
         </Button>
 
+
         <Button
-          type="submit"
-          form="editApartmentForm"
+          type="button"
+          onClick={() => setMostrarPopupSalvar(true)} // ✅ Abre popup de salvar
           disabled={isLoading}
           className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
         >
           <FiSave size={16} />
           {isLoading ? "Salvando..." : "Salvar"}
         </Button>
+        
+        {/* ✅ Popups reutilizáveis */}
+<DeletePopup
+  isOpen={mostrarPopupExcluir}
+  onClose={() => setMostrarPopupExcluir(false)}
+  onConfirm={async () => {
+    try {
+      setIsLoading(true);
+      await api.delete(`/Apartamento/ExcluirApartamento/${id}`);
+      setApiError("Apartamento excluído com sucesso!");
+      setMostrarPopupExcluir(false);
+      setTimeout(() => router.push("/apartaments/desktop"), 900);
+    } catch {
+      setApiError("Erro ao conectar com a API.");
+    } finally {
+      setIsLoading(false);
+    }
+  }}
+/>
+
+<EditPopup
+  isOpen={mostrarPopupSalvar}
+  onClose={() => setMostrarPopupSalvar(false)}
+  onConfirm={async () => {
+    try {
+      setIsLoading(true);
+      const body = {
+        id: Number(id),
+        bloco,
+        numero,
+        proprietario,
+        situacao: Number(situacao),
+        observacoes,
+      };
+      await api.put(`/Apartamento/AtualizarApartamento/${id}`, body);
+      setApiError("Apartamento atualizado com sucesso!");
+      setMostrarPopupSalvar(false);
+      setTimeout(() => router.push("/apartaments/desktop"), 900);
+    } catch (err: any) {
+      setApiError("Erro ao conectar com a API: " + (err.message || "verifique a URL ou o servidor."));
+    } finally {
+      setIsLoading(false);
+    }
+  }}
+/>
+
       </div>
     </div>
 

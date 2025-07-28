@@ -23,6 +23,9 @@ export default function ApartmentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [mostrarPopupRelatorio, setMostrarPopupRelatorio] = useState(false);
+  
+
   useEffect(() => {
   const fetchApartamentos = async () => {
     setIsLoading(true);
@@ -84,9 +87,10 @@ export default function ApartmentsPage() {
     Voltar
   </Button>
 
-  <div className="flex items-center gap-2">
+  <div className="flex gap-4">
     <Button
       type="button"
+      onClick={() => setMostrarPopupRelatorio(true)}
       variant="ghost"
       className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
     >
@@ -101,7 +105,45 @@ export default function ApartmentsPage() {
     </Button>
   </div>
 </div>
+{mostrarPopupRelatorio && (
+  <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+      {/* Botão de fechar */}
+      <button
+        onClick={() => setMostrarPopupRelatorio(false)}
+        className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+      >
+        x
+      </button>
 
+      <h2 className="text-lg text-center font-semibold mb-2 text-[#217346]">
+  Relatório gerado com sucesso
+</h2>
+
+<p className="text-sm text-center text-gray-700 mb-6">
+  Clique no botão para fazer o download do arquivo.
+</p>
+
+
+<div className="flex justify-center">
+  <Button
+    className="bg-[#217346] hover:bg-[#1a5c38] text-white px-4 py-2 text-sm rounded"
+    onClick={() => {
+      const link = document.createElement("a");
+      link.href = `${api.defaults.baseURL}/relatorios/apartamentos`;
+      link.setAttribute("download", `Relatorio_Apartamentos.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setMostrarPopupRelatorio(false);
+    }}
+  >
+    Baixar Excel
+  </Button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Conteúdo principal */}
       <div className="max-w-[70rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">

@@ -5,8 +5,8 @@
   import { Input } from "@/components/ui/input";
   import { useRouter } from "next/navigation";
   import { BsChevronDoubleLeft } from "react-icons/bs";
-  import { FiPlus, FiSearch, FiFileText } from "react-icons/fi";
-  import { formatCPF, cleanDocument } from "@/services/formatValues";
+  import { FiPlus, FiSearch, FiFileText, FiUsers } from "react-icons/fi";
+  import { formatCPF, cleanDocument, formatDateTime, formatDateOnly, formatTimeBrazil } from "@/services/formatValues";
   import api from "@/services/api"; 
   import { KeyRound } from "lucide-react";
   import { FaFilter, FaSearch } from "react-icons/fa";
@@ -17,6 +17,8 @@
     nivelAcesso: string;
     dataHoraEntrada: string;
   }
+
+  
 
   export default function RegistroAcessosPage() {
     const router = useRouter();
@@ -35,6 +37,8 @@
   const [filtroAptoVisitado, setFiltroAptoVisitado] = useState("");
   const [dataInicioVisitante, setDataInicioVisitante] = useState("");
   const [dataFimVisitante, setDataFimVisitante] = useState("");
+  const [ordemDataAscVisitante, setOrdemDataAscVisitante] = useState(true);
+
 
 
     const [filtroTipo, setFiltroTipo] = useState("");
@@ -53,6 +57,19 @@
     const [filtroApartamento, setFiltroApartamento] = useState("");
     const [filtroNivel, setFiltroNivel] = useState("");
 
+    const ordenarPorDataHoraVisitante = () => {
+  const ordenado = [...acessos].sort((a, b) => {
+    const dataA = new Date(a.dataEntrada);
+    const dataB = new Date(b.dataEntrada);
+    return ordemDataAscVisitante
+      ? dataA.getTime() - dataB.getTime()
+      : dataB.getTime() - dataA.getTime();
+  });
+  setAcessos(ordenado);
+  setOrdemDataAscVisitante(!ordemDataAscVisitante);
+};
+
+
     const extrairData = (isoString: string): string => {
       const date = new Date(isoString);
       const dia = String(date.getDate()).padStart(2, "0");
@@ -67,6 +84,31 @@
       const minuto = String(date.getMinutes()).padStart(2, "0");
       return `${hora}h${minuto}`;
     };
+
+    
+
+    const buscarTodosMoradores = async () => {
+  setBuscou(true);
+  try {
+    const response = await api.get("/AcessoEntradaMorador/ListarEntradasMorador");
+    const data = response.data;
+    setAcessos(Array.isArray(data) ? data : []);
+  } catch {
+    setAcessos([]);
+  }
+};
+
+const buscarTodosVisitantes = async () => {
+  setBuscou(true);
+  try {
+    const response = await api.get("/AcessoEntradaVisitante/ListarEntradasVisitantes");
+    
+    const data = response.data;
+    setAcessos(Array.isArray(data) ? data : []);
+  } catch {
+    setAcessos([]);
+  }
+};
 
     const ordenarPorDataHora = () => {
       const ordenado = [...acessos].sort((a, b) => {
@@ -186,18 +228,6 @@
 
 
     const handleBuscar = async () => {
-    if (filtroTipo === "todas") {
-      setBuscou(true);
-      try {
-        const response = await api.get("/AcessoEntradaMorador/ListarEntradasMorador");
-        const data = response.data;
-        setAcessos(Array.isArray(data) ? data : []);
-      } catch {
-        setAcessos([]);
-      }
-      return;
-    }
-
     if (!validarFiltros()) return;
     setBuscou(true);
 
@@ -332,7 +362,7 @@ const renderCampoDataVisitante = () => (
               <FiFileText size={16} /> Gerar relatório
             </Button>
             <Button
-              onClick={() => router.push("/accessLog/add")}
+              onClick={() => router.push("/accessLog/desktop/add")}
               className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-3 py-2 text-sm flex items-center gap-2"
             >
               <KeyRound size={16} /> Adicionar Registro
@@ -341,20 +371,53 @@ const renderCampoDataVisitante = () => (
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-start gap-4 border-b border-gray-200 mb-6">
-            <button
-              className={`py-2 px-4 text-sm font-medium ${abaAtiva === "moradores" ? "border-b-2 border-[#26c9a8] text-[#26c9a8]" : "text-gray-600"}`}
-              onClick={() => setAbaAtiva("moradores")}
-            >
-              Moradores
-            </button>
-            <button
-              className={`py-2 px-4 text-sm font-medium ${abaAtiva === "visitantes" ? "border-b-2 border-[#26c9a8] text-[#26c9a8]" : "text-gray-600"}`}
-              onClick={() => setAbaAtiva("visitantes")}
-            >
-              Visitantes
-            </button>
-          </div>
+          <div className="flex justify-between items-center gap-4 border-b border-gray-200 mb-6">
+  {/* Abas */}
+  <div className="flex gap-4">
+    <button
+      className={`py-2 px-4 text-sm font-medium ${
+        abaAtiva === "moradores" ? "border-b-2 border-[#26c9a8] text-[#26c9a8]" : "text-gray-600"
+      }`}
+      onClick={() => {
+    setAbaAtiva("moradores");
+    setAcessos([]); // 🔑 Limpa os acessos ao trocar aba
+    setBuscou(false); // 🔑 Reseta mensagem "nenhum encontrado"
+  }}  
+    >
+      Moradores
+    </button>
+    <button
+      className={`py-2 px-4 text-sm font-medium ${
+        abaAtiva === "visitantes" ? "border-b-2 border-[#26c9a8] text-[#26c9a8]" : "text-gray-600"
+      }`}
+      onClick={() => {
+    setAbaAtiva("visitantes");
+    setAcessos([]); // 🔑 Limpa os acessos ao trocar aba
+    setBuscou(false);
+  }}
+    >
+      Visitantes
+    </button>
+  </div>
+
+  {/* ✅ Botão condicional */}
+      <Button
+        onClick={() => {
+          if (abaAtiva === "moradores") {
+            buscarTodosMoradores();
+          } else {
+            buscarTodosVisitantes();
+          }
+        }}
+        type="button"
+        variant="ghost"
+        className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+      >
+        <FiUsers size={16} />
+        {abaAtiva === "moradores" ? "Ver todos os moradores" : "Ver todos os visitantes"}
+      </Button>
+</div>
+
 
           {abaAtiva === "moradores" && (
             <>
@@ -379,7 +442,6 @@ const renderCampoDataVisitante = () => (
                     <option value="data">Data</option>
                     <option value="apartamento">Apartamento</option>
                     <option value="nivel">Nível de acesso</option>
-                    <option value="todas">Todas as entradas</option>
                   </select>
 
                   {filtroTipo === "nome" && (
@@ -666,8 +728,10 @@ const renderCampoDataVisitante = () => (
                         <tr key={a.id} className="border-t">
                           <td className="px-4 py-2 text-left font-bold">{a.nome}</td>
                           <td className="px-4 py-2 capitalize text-center">{a.nivelAcesso}</td>
-                          <td className="px-4 py-2 text-center">{extrairData(a.dataHoraEntrada)}</td>
-                          <td className="px-4 py-2 text-center">{extrairHora(a.dataHoraEntrada)}</td>
+                          <td className="px-4 py-2 text-center">{formatDateOnly(a.dataHoraEntrada)}</td>
+                          <td className="px-4 py-2 text-center">
+                            {formatTimeBrazil(a.dataHoraEntrada)}
+                          </td>
                           <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                             <Button size="sm" variant="outline" onClick={() => router.push(`/accessLog/desktop/${a.id}/detalhes`)}>
                               Ver detalhes
@@ -912,8 +976,6 @@ const renderCampoDataVisitante = () => (
   </div>
 </div>
 
-
-
       )}
 
       {!buscou ? (
@@ -922,33 +984,63 @@ const renderCampoDataVisitante = () => (
         <p className="text-gray-500 mt-6">Nenhum visitante encontrado com os critérios informados.</p>
       ) : (
         <div className="mt-6 overflow-x-auto bg-white rounded shadow">
-          <table className="w-full text-sm text-gray-800">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left">Nome</th>
-                <th className="px-4 py-2 text-center">Data</th>
-                <th className="px-4 py-2 text-center">Hora</th>
-                <th className="px-4 py-2 text-center">Apartamento visitado</th>
-                <th className="px-4 py-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {acessos.map((a) => (
-                <tr key={a.id} className="border-t">
-                  <td className="px-4 py-2 text-left font-bold">{a.nome}</td>
-                  <td className="px-4 py-2 text-center">{extrairData(a.dataHoraEntrada)}</td>
-                  <td className="px-4 py-2 text-center">{extrairHora(a.dataHoraEntrada)}</td>
-                  <td className="px-4 py-2 text-center">{a.bloco && a.numero ? `${a.bloco}-${a.numero}` : "—"}</td>
-                  <td className="px-4 py-3 text-center">
-                    <Button size="sm" variant="outline" onClick={() => router.push(`/accessLog/${a.id}/detalhes`)}>
-                      Ver detalhes
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+  <table className="w-full text-sm text-gray-800">
+    <thead className="bg-gray-100">
+  <tr>
+    <th className="px-4 py-2 text-left w-1/3">Nome</th>
+    <th
+      className="px-4 py-2 text-center w-[12%] cursor-pointer hover:underline"
+      onClick={ordenarPorDataHoraVisitante}
+    >
+      Data {ordemDataAscVisitante ? "↑" : "↓"}
+    </th>
+    <th
+      className="px-4 py-2 text-center w-[10%] cursor-pointer hover:underline"
+      onClick={ordenarPorDataHoraVisitante}
+    >
+      Hora {ordemDataAscVisitante ? "↑" : "↓"}
+    </th>
+    <th className="px-4 py-2 text-center w-[20%]">Apartamento visitado</th>
+    <th className="px-4 py-2 text-center w-[4%]">Ações</th>
+  </tr>
+</thead>
+
+
+    <tbody>
+      {acessos.map((a) => (
+        <tr key={a.id} className="border-t hover:bg-gray-50">
+          {/* Nome */}
+          <td className="px-4 py-2 text-left font-bold">{a.nomeVisitante}</td>
+
+          {/* Data */}
+          <td className="px-4 py-2 text-center">{formatDateOnly(a.dataEntrada)}</td>
+
+          {/* Hora */}
+          <td className="px-4 py-2 text-center">
+            {formatTimeBrazil(a.dataEntrada)}
+          </td>
+          {/* Apartamento */}
+          <td className="px-4 py-2 text-center">
+            {a.bloco && a.apartamento ? `${a.bloco}-${a.apartamento}` : "—"}
+          </td>
+
+          {/* Botão alinhado à direita */}
+          <td className="px-4 py-2 text-right">
+            <Button
+              size="sm"
+              variant="outline"
+              className="whitespace-nowrap"
+              onClick={() => router.push(`/accessLog/${a.id}/detalhes`)}
+            >
+              Ver detalhes
+            </Button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
       )}
     </>
   )}

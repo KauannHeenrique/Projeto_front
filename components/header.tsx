@@ -19,7 +19,9 @@ import {
   Settings,
   X, 
   PlusIcon,
-  BellPlusIcon
+  BellPlusIcon,
+  BellRing,
+  InboxIcon
 } from "lucide-react"
 import Cookies from "js-cookie"
 
@@ -52,13 +54,28 @@ export function Header() {
     Relatórios
   </Link>
 
-  <Link
-    href="/notification/admin/add"
-    className="text-sm font-medium text-gray-700 hover:text-[#26c9a8] flex items-center gap-2"
-  >
-    <BellPlusIcon size={18} />
-    Notificação
-  </Link>
+ <DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost" size="icon">
+      <BellRing size={18} />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem>
+      <Link href="/notification/admin/add" className="flex items-center w-full">
+        <BellPlusIcon size={18} className="mr-2" />
+        Criar Notificação
+      </Link>
+    </DropdownMenuItem>
+    <DropdownMenuItem>
+      <Link href="/notification/admin" className="flex items-center w-full">
+        <InboxIcon size={18} className="mr-2" />
+        Minhas Notificações
+      </Link>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+
 
 
 

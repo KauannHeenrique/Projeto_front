@@ -7,6 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import { FiSave, FiTrash2 } from "react-icons/fi";
 import api from "@/services/api";
+import { DeletePopup, EditPopup } from "@/services/popUps";
 import { formatCPF, formatCNPJ, formatPhone, cleanDocument } from "@/services/formatValues";
 
 interface FormData {
@@ -32,6 +33,9 @@ export default function EditVisitor() {
     cnpj: "",
     status: "ativo",
   });
+
+  const [mostrarPopupExcluir, setMostrarPopupExcluir] = useState(false);
+  const [mostrarPopupSalvar, setMostrarPopupSalvar] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -99,7 +103,7 @@ export default function EditVisitor() {
       try {
         await api.delete(`/Visitante/ExcluirVisitante/${id}`);
         setApiError("Visitante excluído com sucesso!");
-        setTimeout(() => router.push("/visitors"), 1000);
+        setTimeout(() => router.push("/users/desktop"), 1000);
       } catch (err: any) {
         const msg = err?.response?.data?.mensagem || "Erro ao excluir visitante.";
         setApiError(msg);
@@ -121,21 +125,71 @@ export default function EditVisitor() {
 
         <div className="flex gap-4">
           <Button
-            onClick={handleDelete}
-            disabled={isLoading}
-            variant="ghost"
-            className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400"
-          >
-            <FiTrash2 size={16} /> Remover
-          </Button>
-          <Button
-            type="submit"
-            form="editVisitorForm"
-            disabled={isLoading}
-            className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4"
-          >
-            <FiSave size={16} /> {isLoading ? "Salvando..." : "Salvar"}
-          </Button>
+  onClick={() => setMostrarPopupExcluir(true)}
+  disabled={isLoading}
+  variant="ghost"
+  className="text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400"
+>
+  <FiTrash2 size={16} /> Remover
+</Button>
+
+<Button
+  type="button"
+  onClick={() => setMostrarPopupSalvar(true)}
+  disabled={isLoading}
+  className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4"
+>
+  <FiSave size={16} /> {isLoading ? "Salvando..." : "Salvar"}
+</Button>
+
+<DeletePopup
+  isOpen={mostrarPopupExcluir}
+  onClose={() => setMostrarPopupExcluir(false)}
+  onConfirm={async () => {
+    try {
+      setIsLoading(true);
+      await api.delete(`/Visitante/ExcluirVisitante/${id}`);
+      setApiError("Visitante excluído com sucesso!");
+      setMostrarPopupExcluir(false);
+      setTimeout(() => router.push("/users/desktop"), 900);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao excluir visitante.";
+      setApiError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }}
+/>
+
+<EditPopup
+  isOpen={mostrarPopupSalvar}
+  onClose={() => setMostrarPopupSalvar(false)}
+  onConfirm={async () => {
+    try {
+      setIsLoading(true);
+      const visitanteAtualizado = {
+        id: Number(id),
+        nome: formData.nome,
+        documento: cleanDocument(formData.documento),
+        telefone: cleanDocument(formData.telefone),
+        prestadorServico: formData.prestadorServico,
+        nomeEmpresa: formData.prestadorServico ? formData.nomeEmpresa : null,
+        cnpj: formData.prestadorServico ? cleanDocument(formData.cnpj) : null,
+        status: formData.status === "ativo",
+      };
+      await api.put(`/Visitante/AtualizarVisitante/${id}`, visitanteAtualizado);
+      setApiError("Visitante atualizado com sucesso!");
+      setMostrarPopupSalvar(false);
+      setTimeout(() => router.push("/users/desktop"), 900);
+    } catch (err: any) {
+      const msg = err?.response?.data?.mensagem || "Erro ao atualizar visitante.";
+      setApiError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }}
+/>
+
         </div>
       </div>
 

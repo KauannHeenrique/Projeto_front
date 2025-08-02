@@ -18,6 +18,9 @@ import {
 import Link from "next/link";
 import { Header } from "@/components/header";
 import api from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import LoadingScreen from "@/services/loadingScreen";
 
 interface Activity {
   id: number;
@@ -82,24 +85,51 @@ const getStatusColor = (status: number) => {
   }
 };
 
-
 export default function Home() {
   const [totalUsuarios, setTotalUsuarios] = useState<number>(0);
   const [totalApartamentos, setTotalApartamentos] = useState<number>(0);
   const [totalEntradas, setTotalEntradas] = useState<number>(0);
+  const { user, loading, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Verificação de autenticação
+  useEffect(() => {
+    if (!loading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+        return;
+      }
+      
+      // Verifica se o usuário tem nível de acesso adequado para desktop
+      if (![1, 3].includes(Number(user?.nivelAcesso) || 0)) {
+        router.push("/home/mobile");
+        return;
+      }
+    }
+  }, [user, loading, isAuthenticated, router]);
+
+  // Se ainda está carregando ou não está autenticado, mostra loading
+  if (loading || !isAuthenticated) {
+    return <LoadingScreen message="Carregando..." />;
+  }
+
+  // Se o usuário não tem nível adequado, não renderiza nada (já redirecionou)
+  if (![1, 3].includes(Number(user?.nivelAcesso) || 0)) {
+    return null;
+  }
 
   const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Aprovada":
-      return "text-green-600 font-medium";
-    case "EmAndamento":
-      return "text-blue-600 font-medium";
-    case "Pendente":
-      return "text-yellow-600 font-medium";
-    default:
-      return "text-gray-500";
-  }
-};
+    switch (status) {
+      case "Aprovada":
+        return "text-green-600 font-medium";
+      case "EmAndamento":
+        return "text-blue-600 font-medium";
+      case "Pendente":
+        return "text-yellow-600 font-medium";
+      default:
+        return "text-gray-500";
+    }
+  };
 
 
 const [alertasRecentes, setAlertasRecentes] = useState<any[]>([]);

@@ -18,7 +18,7 @@ interface Notificacao {
   tipo: number;
   status: number;
   dataCriacao: string;
-  bloco?: string;       // Novo
+  bloco?: string; // Novo
   apartamento?: string; // Novo
 }
 
@@ -28,7 +28,7 @@ const tiposNotificacao = [
   { value: 2, label: "Solicitação de reparo" },
   { value: 3, label: "Sugestão" },
   { value: 4, label: "Outros" },
-  { value: 5, label: "Comunicado geral" } 
+  { value: 5, label: "Comunicado geral" },
 ];
 
 const statusOptions = [
@@ -115,80 +115,81 @@ export default function TodasNotificacoesPage() {
   const [mostrarLista, setMostrarLista] = useState(false);
 
   const buscarNotificacoes = async (exibirTodas = false) => {
-  try {
-    setErro("");
-    setNotificacoes([]);
-    setLoading(true);
+    try {
+      setErro("");
+      setNotificacoes([]);
+      setLoading(true);
 
-    let url = "";
-    let queryParams: Record<string, string> = {};
+      let url = "";
+      let queryParams: Record<string, string> = {};
 
-    if (exibirTodas) {
-      // ✅ Chama rota que lista todas
-      url = "/Notificacao/ListarTodas";
-    } else {
-      // ✅ Chama rota que busca com filtros
-      url = "/Notificacao/BuscarNotificacaoPor";
+      if (exibirTodas) {
+        // ✅ Chama rota que lista todas
+        url = "/Notificacao/ListarTodas";
+      } else {
+        // ✅ Chama rota que busca com filtros
+        url = "/Notificacao/BuscarNotificacaoPor";
 
-      if (statusFiltro !== "") queryParams.status = statusFiltro;
-      if (tipoFiltro !== "") queryParams.tipo = tipoFiltro;
-      if (blocoFiltro) queryParams.bloco = blocoFiltro;
-      if (apartamentoFiltro) queryParams.apartamento = apartamentoFiltro;
+        if (statusFiltro !== "") queryParams.status = statusFiltro;
+        if (tipoFiltro !== "") queryParams.tipo = tipoFiltro;
+        if (blocoFiltro) queryParams.bloco = blocoFiltro;
+        if (apartamentoFiltro) queryParams.apartamento = apartamentoFiltro;
 
-      // ✅ Período
-      if (periodoFiltro && periodoFiltro !== "customizado") {
-        const hoje = new Date();
-        const dias = parseInt(periodoFiltro, 10);
-        const dataInicioCalc = new Date();
-        dataInicioCalc.setDate(hoje.getDate() - dias);
-        queryParams.dataInicio = dataInicioCalc.toISOString().split("T")[0];
-        queryParams.dataFim = hoje.toISOString().split("T")[0];
-      } else if (periodoFiltro === "customizado") {
-        if (dataInicio) queryParams.dataInicio = dataInicio;
-        if (dataFim) queryParams.dataFim = dataFim;
+        // ✅ Período
+        if (periodoFiltro && periodoFiltro !== "customizado") {
+          const hoje = new Date();
+          const dias = parseInt(periodoFiltro, 10);
+          const dataInicioCalc = new Date();
+          dataInicioCalc.setDate(hoje.getDate() - dias);
+          queryParams.dataInicio = dataInicioCalc.toISOString().split("T")[0];
+          queryParams.dataFim = hoje.toISOString().split("T")[0];
+        } else if (periodoFiltro === "customizado") {
+          if (dataInicio) queryParams.dataInicio = dataInicio;
+          if (dataFim) queryParams.dataFim = dataFim;
+        }
       }
+
+      const { data } = await api.get(url, { params: queryParams });
+
+      setNotificacoes(data.notificacoes || []);
+    } catch (error: any) {
+      setNotificacoes([]);
+
+      if (error.response?.status === 404 && error.response?.data?.mensagem) {
+      } else {
+        setErro("Erro ao carregar notificações.");
+      }
+    } finally {
+      setLoading(false);
     }
-
-    const { data } = await api.get(url, { params: queryParams });
-
-    setNotificacoes(data.notificacoes || []);
-  } catch (error: any) {
-    setNotificacoes([]);
-    console.error("Erro ao buscar notificações", error);
-    setErro("Erro ao carregar notificações.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   const handleBuscarClick = () => {
-  const nenhumFiltro =
-    statusFiltro === "" &&
-    tipoFiltro === "" &&
-    blocoFiltro.trim() === "" &&
-    apartamentoFiltro.trim() === "" &&
-    (periodoFiltro === "" || (periodoFiltro === "customizado" && !dataInicio && !dataFim));
+    const nenhumFiltro =
+      statusFiltro === "" &&
+      tipoFiltro === "" &&
+      blocoFiltro.trim() === "" &&
+      apartamentoFiltro.trim() === "" &&
+      (periodoFiltro === "" ||
+        (periodoFiltro === "customizado" && !dataInicio && !dataFim));
 
-  if (nenhumFiltro) {
-    setErro("Preencha pelo menos um filtro antes de buscar.");
-    setNotificacoes([]);
-    return;
-  }
+    if (nenhumFiltro) {
+      setErro("Preencha pelo menos um filtro antes de buscar.");
+      setNotificacoes([]);
+      return;
+    }
 
-  setErro("");
-  setExibindoTodas(false); // ✅ Resetar
-  setMostrarLista(true);
-  buscarNotificacoes(false);
-};
+    setErro("");
+    setExibindoTodas(false); // ✅ Resetar
+    setMostrarLista(true);
+    buscarNotificacoes(false);
+  };
 
   const exibirTodas = () => {
-  setExibindoTodas(true);
-  setMostrarLista(true);
-  buscarNotificacoes(true);
-};
-
+    setExibindoTodas(true);
+    setMostrarLista(true);
+    buscarNotificacoes(true);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -206,18 +207,18 @@ export default function TodasNotificacoesPage() {
       {/* CONTEÚDO */}
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
         <div className="flex justify-between items-center mb-4">
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
-                    Notificações
-                  </h1>
-                  <Button
-                    onClick={exibirTodas}
-                    type="button"
-                    variant="ghost"
-                    className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
-                  >
-                    <FiBell size={16} /> Exibir todas as notificações
-                  </Button>
-                </div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
+            Notificações
+          </h1>
+          <Button
+            onClick={exibirTodas}
+            type="button"
+            variant="ghost"
+            className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+          >
+            <FiBell size={16} /> Exibir todas as notificações
+          </Button>
+        </div>
 
         {/* FILTROS */}
         <div className="bg-white rounded-lg shadow p-4 space-y-4">
@@ -300,15 +301,11 @@ export default function TodasNotificacoesPage() {
             </div>
           )}
 
-
           {erro && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
               {erro}
             </div>
           )}
-
-          
-
         </div>
 
         {/* LISTA */}
@@ -321,47 +318,52 @@ export default function TodasNotificacoesPage() {
                 Nenhuma notificação encontrada.
               </p>
             ) : (
-  notificacoes.map((n) => (
-    <div
-      key={n.id}
-      className="bg-white rounded-lg shadow p-4 flex justify-between items-center hover:bg-gray-50 transition"
-    >
-      <div className="flex flex-col">
-        {/* Badge acima */}
-        {n.status === 1 && (
-          <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full mb-1 w-fit">
-            • Ação necessária
-          </span>
-        )}
+              notificacoes.map((n) => (
+                <div
+                  key={n.id}
+                  className="bg-white rounded-lg shadow p-4 flex justify-between items-center hover:bg-gray-50 transition"
+                >
+                  <div className="flex flex-col">
+                    {/* Badge acima */}
+                    {n.status === 1 && (
+                      <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full mb-1 w-fit">
+                        • Ação necessária
+                      </span>
+                    )}
 
-        {/* Ícone + Título */}
-        <div className="flex items-center gap-2">
-          {getStatusIcon(n.status)}
-          <p className="font-semibold text-gray-800 truncate max-w-[200px]">
-            {n.titulo || "Alerta"}
-          </p>
-        </div>
+                    {/* Ícone + Título */}
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(n.status)}
+                      <p className="font-semibold text-gray-800 truncate max-w-[200px]">
+                        {n.titulo || "Alerta"}
+                      </p>
+                    </div>
 
-        {/* Data + Bloco e Apartamento */}
-        <p className="text-xs text-gray-500 mt-1">
-          {new Date(n.dataCriacao).toLocaleDateString("pt-BR")}
-          {n.origem?.bloco || n.origem?.apartamento ? (
-            <> • Bloco: {n.origem?.bloco || "-"} | Apto: {n.origem?.apartamento || "-"}</>
-          ) : null}
-        </p>
-      </div>
+                    {/* Data + Bloco e Apartamento */}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(n.dataCriacao).toLocaleDateString("pt-BR")}
+                      {n.origem?.bloco || n.origem?.apartamento ? (
+                        <>
+                          {" "}
+                          • Bloco: {n.origem?.bloco || "-"} | Apto:{" "}
+                          {n.origem?.apartamento || "-"}
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => router.push(`/notification/admin/details/${n.id}`)}
-      >
-        Ver detalhes
-      </Button>
-    </div>
-  ))
-)
-}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      router.push(`/notification/admin/details/${n.id}`)
+                    }
+                  >
+                    Ver detalhes
+                  </Button>
+                </div>
+              ))
+            )}
 
             {temMais && (
               <Button

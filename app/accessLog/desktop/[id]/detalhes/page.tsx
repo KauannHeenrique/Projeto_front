@@ -29,15 +29,18 @@ export default function DetalhesAcessoPage() {
 
   useEffect(() => {
     const fetchAcesso = async () => {
-       try {
-      const { data } = await api.get("/AcessoEntradaMorador/BuscarEntradaPorId", {
-        params: { id },
-      });
+      try {
+        const { data } = await api.get(
+          "/AcessoEntradaMorador/BuscarEntradaPorId",
+          {
+            params: { id },
+          }
+        );
 
-      if (!data || !data.usuario) {
-        setErro("Acesso não encontrado.");
-        return;
-      }
+        if (!data || !data.usuario) {
+          setErro("Acesso não encontrado.");
+          return;
+        }
 
         setDetalhes({
           nome: data.usuario.nome,
@@ -50,7 +53,7 @@ export default function DetalhesAcessoPage() {
           entradaPor: data.entradaPor,
           codigoRFID: data.codigoRFID,
           observacao: data.observacao,
-          registradoPor: data.registradoPor
+          registradoPor: data.registradoPor,
         });
       } catch (err) {
         setErro("Erro ao carregar detalhes do acesso.");
@@ -67,7 +70,9 @@ export default function DetalhesAcessoPage() {
 
   const formatarHora = (iso: string) => {
     const date = new Date(iso);
-    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    return `${String(date.getHours()).padStart(2, "0")}:${String(
+      date.getMinutes()
+    ).padStart(2, "0")}`;
   };
 
   return (
@@ -81,105 +86,110 @@ export default function DetalhesAcessoPage() {
         >
           <BsChevronDoubleLeft size={16} /> Voltar
         </Button>
-        
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
         <h1 className="text-xl font-bold mb-6">Detalhes do Acesso</h1>
 
-        {erro && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{erro}</div>}
+        {erro && (
+          <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{erro}</div>
+        )}
 
         {detalhes && (
-  <div className="bg-white shadow rounded p-6 space-y-6">
-    <div className="flex items-center gap-6 mb-4">
-      <div className="w-24 h-24 flex-shrink-0 border rounded-full bg-gray-100 overflow-hidden">
-        {detalhes.fotoUrl ? (
-          <img
-            src={detalhes.fotoUrl}
-            alt={`Foto de ${detalhes.nome}`}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-            Sem foto
+          <div className="bg-white shadow rounded p-6 space-y-6">
+            <div className="flex items-center gap-6 mb-4">
+              <div className="w-24 h-24 flex-shrink-0 border rounded-full bg-gray-100 overflow-hidden">
+                {detalhes.fotoUrl ? (
+                  <img
+                    src={detalhes.fotoUrl}
+                    alt={`Foto de ${detalhes.nome}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                    Sem foto
+                  </div>
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">{detalhes.nome}</h2>
+                <p className="text-gray-500 text-sm">
+                  Documento:{" "}
+                  {detalhes.documento.replace(/\D/g, "").length === 11
+                    ? formatCPF(detalhes.documento)
+                    : formatCNPJ(detalhes.documento)}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div>
+                  <strong>Nível de Acesso:</strong>
+                  <br />
+                  {detalhes.nivelAcesso}
+                </div>
+                <div>
+                  <strong>Bloco:</strong>
+                  <br />
+                  {detalhes.bloco}
+                </div>
+                <div>
+                  <strong>Data:</strong>
+                  <br />
+                  {formatarData(detalhes.dataHoraEntrada)}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div>
+                  <strong>Tipo de Entrada:</strong>
+                  <br />
+                  {detalhes.entradaPor === "1" ? "TAG" : "Manual"}
+                </div>
+                <div>
+                  <strong>Apartamento:</strong>
+                  <br />
+                  {detalhes.apartamento}
+                </div>
+                <div>
+                  <strong>Hora:</strong>
+                  <br />
+                  {formatarHora(detalhes.dataHoraEntrada)}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {detalhes.entradaPor === "1" && detalhes.codigoRFID && (
+                  <div>
+                    <strong>Código RFID:</strong>
+                    <br />
+                    {detalhes.codigoRFID}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {detalhes.entradaPor === "2" && (
+              <div className="pt-6 space-y-2 border-t border-gray-200">
+                {detalhes.registradoPor && (
+                  <div>
+                    <strong>Registrado por:</strong>
+                    <br />
+                    {detalhes.registradoPor}
+                  </div>
+                )}
+                {detalhes.observacao && (
+                  <div>
+                    <strong>Observação:</strong>
+                    <br />
+                    {detalhes.observacao}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
-      </div>
-      <div>
-        <h2 className="text-xl font-semibold">{detalhes.nome}</h2>
-        <p className="text-gray-500 text-sm">
-  Documento: {
-    detalhes.documento.replace(/\D/g, "").length === 11
-      ? formatCPF(detalhes.documento)
-      : formatCNPJ(detalhes.documento)
-  }
-</p>
-
-      </div>
-    </div>
-
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="space-y-2">
-        <div>
-          <strong>Nível de Acesso:</strong><br />
-          {detalhes.nivelAcesso}
-        </div>
-        <div>
-          <strong>Bloco:</strong><br />
-          {detalhes.bloco}
-        </div>
-        <div>
-          <strong>Data:</strong><br />
-          {formatarData(detalhes.dataHoraEntrada)}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div>
-          <strong>Tipo de Entrada:</strong><br />
-          {detalhes.entradaPor === "1" ? "TAG" : "Manual"}
-        </div>
-        <div>
-          <strong>Apartamento:</strong><br />
-          {detalhes.apartamento}
-        </div>
-        <div>
-          <strong>Hora:</strong><br />
-          {formatarHora(detalhes.dataHoraEntrada)}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        {detalhes.entradaPor === "1" && detalhes.codigoRFID && (
-  <div>
-    <strong>Código RFID:</strong><br />
-    {detalhes.codigoRFID}
-  </div>
-)}
-      </div>
-    </div>
-
-    {detalhes.entradaPor === "2" && (
-      <div className="pt-6 space-y-2 border-t border-gray-200">
-        {detalhes.registradoPor && (
-          <div>
-            <strong>Registrado por:</strong><br />
-            {detalhes.registradoPor}
-          </div>
-        )}
-        {detalhes.observacao && (
-          <div>
-            <strong>Observação:</strong><br />
-            {detalhes.observacao}
-          </div>
-        )}
-      </div>
-    )}
-  </div>
-)}
-
-
       </div>
     </div>
   );

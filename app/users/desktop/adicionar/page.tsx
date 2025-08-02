@@ -46,7 +46,9 @@ export default function AddUser() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
-  const [tipoCadastro, setTipoCadastro] = useState<"morador" | "visitante" | "">("");
+  const [tipoCadastro, setTipoCadastro] = useState<
+    "morador" | "visitante" | ""
+  >("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -69,21 +71,32 @@ export default function AddUser() {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) newErrors.name = "O nome é obrigatório.";
-    else if (formData.name.length < 2) newErrors.name = "O nome deve ter pelo menos 2 caracteres.";
+    else if (formData.name.length < 2)
+      newErrors.name = "O nome deve ter pelo menos 2 caracteres.";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) newErrors.email = "O email é obrigatório.";
-    else if (!emailRegex.test(formData.email)) newErrors.email = "Email inválido.";
+    else if (!emailRegex.test(formData.email))
+      newErrors.email = "Email inválido.";
 
     const phoneDigits = formData.phone.replace(/\D/g, "");
-    const phoneRegex = /^\d{2}9\d{8}$/;
-    if (!phoneDigits) newErrors.phone = "O telefone é obrigatório.";
-    else if (!phoneRegex.test(phoneDigits)) newErrors.phone = "Telefone inválido.";
 
+    if (!phoneDigits) {
+      newErrors.phone = "O telefone é obrigatório.";
+    } else {
+      const isMobile = /^\d{2}9\d{8}$/.test(phoneDigits); // Celular com 9
+      const isLandline = /^\d{2}[2-8]\d{7}$/.test(phoneDigits); // Fixo com 8
+      console.log(phoneDigits);
+      if (!isMobile && !isLandline) {
+        newErrors.phone =
+          "Telefone inválido. Use o formato DDD + número, como 11912345678.";
+      }
+    }
     if (!formData.document.trim()) newErrors.document = "O CPF é obrigatório.";
 
     const validAccessLevels = ["funcionario", "sindico", "morador"];
-    if (!validAccessLevels.includes(formData.accessLevel)) newErrors.accessLevel = "Selecione um nível válido.";
+    if (!validAccessLevels.includes(formData.accessLevel))
+      newErrors.accessLevel = "Selecione um nível válido.";
 
     if (formData.accessLevel !== "funcionario" && (!bloco || !numero)) {
       newErrors.apartmentId = "Informe o bloco e número do apartamento.";
@@ -121,12 +134,15 @@ export default function AddUser() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setIsLoading(true);
     setErrors({});
     setApiError(null);
 
     const validationErrors = validateForm();
+
     if (Object.keys(validationErrors).length > 0) {
+      console.log("sanjdanjdsajnjasd", validationErrors);
       setErrors(validationErrors);
       setIsLoading(false);
       return;
@@ -164,7 +180,10 @@ export default function AddUser() {
         Telefone: cleanDocument(formData.phone),
         Documento: cleanDocument(formData.document),
         NivelAcesso: nivelAcessoMap[formData.accessLevel],
-        ApartamentoId: formData.accessLevel === "funcionario" ? null : parseInt(apartmentId || "0") || null,
+        ApartamentoId:
+          formData.accessLevel === "funcionario"
+            ? null
+            : parseInt(apartmentId || "0") || null,
         CodigoRFID: formData.codigoRFID || null,
         Senha: "default123",
         Status: true,
@@ -199,8 +218,12 @@ export default function AddUser() {
           </div>
 
           <div className="max-w-2xl mx-auto px-4 py-6">
-            <h1 className="text-xl font-bold text-center mb-6">Novo cadastro</h1>
-            <p className="text-gray-700 font-medium text-lg text-center mb-4">Deseja cadastrar um:</p>
+            <h1 className="text-xl font-bold text-center mb-6">
+              Novo cadastro
+            </h1>
+            <p className="text-gray-700 font-medium text-lg text-center mb-4">
+              Deseja cadastrar um:
+            </p>
 
             <div className="flex gap-6 justify-center">
               <button
@@ -240,7 +263,7 @@ export default function AddUser() {
                 type="submit"
                 form="addUserForm"
                 disabled={isLoading}
-                className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
+                className="bg-[#26c9a8] hover:bg-[#a7e3d6] text-white px-4 py-2 rounded font-semibold flex items-center gap-2"
               >
                 <FiSave size={16} />
                 {isLoading ? "Cadastrando..." : "Cadastrar"}
@@ -249,38 +272,64 @@ export default function AddUser() {
           </div>
 
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Adicionar usuário</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">
+              Adicionar usuário
+            </h1>
 
             {apiError && (
-              <div className={`mb-4 p-4 rounded ${apiError.includes("sucesso") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <div
+                className={`mb-4 p-4 rounded ${
+                  apiError.includes("sucesso")
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
                 {apiError}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} id="addUserForm" className="space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              id="addUserForm"
+              className="space-y-6"
+            >
               {/* Nome e Email */}
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="name" className="mb-2 font-medium text-gray-700">Nome</label>
+                  <label
+                    htmlFor="name"
+                    className="mb-2 font-medium text-gray-700"
+                  >
+                    Nome
+                  </label>
                   <Input
                     id="name"
                     name="name"
                     placeholder="Nome completo"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     disabled={isLoading}
                     required
                   />
                 </div>
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="email" className="mb-2 font-medium text-gray-700">Email</label>
+                  <label
+                    htmlFor="email"
+                    className="mb-2 font-medium text-gray-700"
+                  >
+                    Email
+                  </label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
                     placeholder="usuario@condominio.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     disabled={isLoading}
                     required
                   />
@@ -290,25 +339,45 @@ export default function AddUser() {
               {/* Telefone e CPF */}
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="phone" className="mb-2 font-medium text-gray-700">Telefone</label>
+                  <label
+                    htmlFor="phone"
+                    className="mb-2 font-medium text-gray-700"
+                  >
+                    Telefone
+                  </label>
                   <Input
                     id="phone"
                     name="phone"
                     placeholder="(99) 99999-9999"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        phone: formatPhone(e.target.value),
+                      })
+                    }
                     disabled={isLoading}
                     required
                   />
                 </div>
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="document" className="mb-2 font-medium text-gray-700">CPF</label>
+                  <label
+                    htmlFor="document"
+                    className="mb-2 font-medium text-gray-700"
+                  >
+                    CPF
+                  </label>
                   <Input
                     id="document"
                     name="document"
                     placeholder="000.000.000-00"
                     value={formData.document}
-                    onChange={(e) => setFormData({ ...formData, document: formatCPF(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        document: formatCPF(e.target.value),
+                      })
+                    }
                     disabled={isLoading}
                     required
                   />
@@ -318,12 +387,19 @@ export default function AddUser() {
               {/* Nível de Acesso */}
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="accessLevel" className="mb-2 font-medium text-gray-700">Nível de Acesso</label>
+                  <label
+                    htmlFor="accessLevel"
+                    className="mb-2 font-medium text-gray-700"
+                  >
+                    Nível de Acesso
+                  </label>
                   <select
                     id="accessLevel"
                     name="accessLevel"
                     value={formData.accessLevel}
-                    onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, accessLevel: e.target.value })
+                    }
                     disabled={isLoading}
                     required
                     className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
@@ -335,33 +411,41 @@ export default function AddUser() {
                   </select>
                 </div>
 
-                {formData.accessLevel && formData.accessLevel !== "funcionario" && (
-                  <div className="flex flex-col w-full sm:w-1/2">
-                    <label className="mb-2 font-medium text-gray-700">Bloco e Número</label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Bloco"
-                        value={bloco}
-                        onChange={(e) => setBloco(e.target.value)}
-                        disabled={isLoading}
-                        className="border border-gray-300 w-full"
-                      />
-                      <Input
-                        placeholder="Número"
-                        value={numero}
-                        onChange={(e) => setNumero(e.target.value)}
-                        disabled={isLoading}
-                        className="border border-gray-300 w-full"
-                      />
+                {formData.accessLevel &&
+                  formData.accessLevel !== "funcionario" && (
+                    <div className="flex flex-col w-full sm:w-1/2">
+                      <label className="mb-2 font-medium text-gray-700">
+                        Bloco e Número
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Bloco"
+                          value={bloco}
+                          onChange={(e) => setBloco(e.target.value)}
+                          disabled={isLoading}
+                          className="border border-gray-300 w-full"
+                        />
+                        <Input
+                          placeholder="Número"
+                          value={numero}
+                          onChange={(e) => setNumero(e.target.value)}
+                          disabled={isLoading}
+                          className="border border-gray-300 w-full"
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               {/* RFID */}
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex flex-col w-full sm:w-1/2">
-                  <label htmlFor="codigoRFID" className="mb-2 font-medium text-gray-700">Código RFID</label>
+                  <label
+                    htmlFor="codigoRFID"
+                    className="mb-2 font-medium text-gray-700"
+                  >
+                    Código RFID
+                  </label>
                   <div className="flex gap-2">
                     <Input
                       id="codigoRFID"
@@ -369,7 +453,9 @@ export default function AddUser() {
                       placeholder="Ex: ABCD1234"
                       value={formData.codigoRFID}
                       required
-                      onChange={() => {}} // impede alteração manual
+                      onChange={(e) =>
+                        setFormData({ ...formData, codigoRFID: e.target.value })
+                      }
                       className="border border-gray-300 focus:border-indigo-500 flex-grow"
                     />
 

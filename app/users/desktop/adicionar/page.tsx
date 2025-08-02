@@ -80,11 +80,18 @@ export default function AddUser() {
       newErrors.email = "Email inválido.";
 
     const phoneDigits = formData.phone.replace(/\D/g, "");
-    const phoneRegex = /^\d{2}9\d{8}$/;
-    if (!phoneDigits) newErrors.phone = "O telefone é obrigatório.";
-    else if (!phoneRegex.test(phoneDigits))
-      newErrors.phone = "Telefone inválido.";
 
+    if (!phoneDigits) {
+      newErrors.phone = "O telefone é obrigatório.";
+    } else {
+      const isMobile = /^\d{2}9\d{8}$/.test(phoneDigits); // Celular com 9
+      const isLandline = /^\d{2}[2-8]\d{7}$/.test(phoneDigits); // Fixo com 8
+      console.log(phoneDigits);
+      if (!isMobile && !isLandline) {
+        newErrors.phone =
+          "Telefone inválido. Use o formato DDD + número, como 11912345678.";
+      }
+    }
     if (!formData.document.trim()) newErrors.document = "O CPF é obrigatório.";
 
     const validAccessLevels = ["funcionario", "sindico", "morador"];
@@ -127,6 +134,7 @@ export default function AddUser() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setIsLoading(true);
     setErrors({});
     setApiError(null);
@@ -134,6 +142,7 @@ export default function AddUser() {
     const validationErrors = validateForm();
 
     if (Object.keys(validationErrors).length > 0) {
+      console.log("sanjdanjdsajnjasd", validationErrors);
       setErrors(validationErrors);
       setIsLoading(false);
       return;

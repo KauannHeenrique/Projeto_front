@@ -420,6 +420,8 @@ export default function RegistroAcessosPage() {
               }`}
               onClick={() => {
                 setAbaAtiva("moradores");
+                setFiltroTipo("");
+                setFiltroTipoVisitante("");
                 setAcessos([]); // 🔑 Limpa os acessos ao trocar aba
                 setBuscou(false); // 🔑 Reseta mensagem "nenhum encontrado"
               }}
@@ -434,6 +436,9 @@ export default function RegistroAcessosPage() {
               }`}
               onClick={() => {
                 setAbaAtiva("visitantes");
+                setFiltroTipo("");
+                setFiltroTipoVisitante("");
+
                 setAcessos([]); // 🔑 Limpa os acessos ao trocar aba
                 setBuscou(false);
               }}

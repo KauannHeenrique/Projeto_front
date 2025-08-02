@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/header";
 import { useSearchParams } from "next/navigation";
 import api from "@/services/api";
@@ -14,6 +14,7 @@ import {
   CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LoadingScreen from "@/services/loadingScreen";
 
 interface Activity {
   id: number;
@@ -25,7 +26,7 @@ interface Activity {
 
 export default function HomeMobile() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
 
   const [alertasAtivos, setAlertasAtivos] = useState<number>(0);
 
@@ -35,81 +36,107 @@ export default function HomeMobile() {
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [abaAtiva, setAbaAtiva] = useState<"sindico" | "morador">("sindico");
 
-  const isMorador = user?.nivelAcesso === 4;
-  const isSindico = user?.nivelAcesso === 2;
+  const isMorador = Number(user?.nivelAcesso) === 4;
+  const isSindico = Number(user?.nivelAcesso) === 2;
 
   const searchParams = useSearchParams();
-const abaQuery = searchParams.get("aba");
+  const abaQuery = searchParams.get("aba");
 
-const [atividadesRecentes, setAtividadesRecentes] = useState<any[]>([]);
+  const [atividadesRecentes, setAtividadesRecentes] = useState<any[]>([]);
 
-useEffect(() => {
-  async function fetchData() {
-    try {
-      const hoje = new Date().toISOString().split("T")[0];
-
-      if (!isMorador) {
-        const [usuarios, apartamentos] = await Promise.all([
-          api.get("/Usuario/ExibirTodosUsuarios"),
-          api.get("/Apartamento/ExibirTodosApartamentos")
-        ]);
-        setTotalUsuarios(Array.isArray(usuarios.data) ? usuarios.data.length : 0);
-        setTotalApartamentos(Array.isArray(apartamentos.data) ? apartamentos.data.length : 0);
+  // Verificação de autenticação
+  useEffect(() => {
+    if (!loading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+        return;
       }
-
-      const entradas = await api.get(`/AcessoEntradaMorador/FiltrarEntradasAdmin?dataInicio=${hoje}`);
-      setTotalEntradas(Array.isArray(entradas.data) ? entradas.data.length : 0);
-
-      if (user?.usuarioId) {
-        const { data: totalAlertas } = await api.get(`/Notificacao/AlertasAtivos/${user.usuarioId}`);
-        setAlertasAtivos(totalAlertas);
-
-        // ✅ Buscar atividades recentes
-        const { data: atividades } = await api.get(`/Atividades/Recentes/${user.usuarioId}?limite=5`);
-        setAtividadesRecentes(atividades);
+      
+      // Verifica se o usuário tem nível de acesso adequado para mobile
+      if ([1, 3].includes(Number(user?.nivelAcesso) || 0)) {
+        router.push("/home/desktop");
+        return;
       }
-    } catch (error) {
-      console.error("Erro ao buscar dados:", error);
     }
+  }, [user, loading, isAuthenticated, router]);
+
+  // Se ainda está carregando ou não está autenticado, mostra loading
+  if (loading || !isAuthenticated) {
+    return <LoadingScreen message="Carregando..." />;
   }
 
-  if (user) fetchData();
-}, [user]);
-
-
-useEffect(() => {
-  if (abaQuery === "morador" || abaQuery === "sindico") {
-    setAbaAtiva(abaQuery as "morador" | "sindico");
+  // Se o usuário tem nível de desktop, não renderiza nada (já redirecionou)
+  if ([1, 3].includes(Number(user?.nivelAcesso) || 0)) {
+    return null;
   }
-}, [abaQuery]);
 
   useEffect(() => {
-  async function fetchData() {
-    try {
-      const hoje = new Date().toISOString().split("T")[0];
+    async function fetchData() {
+      try {
+        const hoje = new Date().toISOString().split("T")[0];
 
-      if (!isMorador) {
-        const [usuarios, apartamentos] = await Promise.all([
-          api.get("/Usuario/ExibirTodosUsuarios"),
-          api.get("/Apartamento/ExibirTodosApartamentos")
-        ]);
-        setTotalUsuarios(Array.isArray(usuarios.data) ? usuarios.data.length : 0);
-        setTotalApartamentos(Array.isArray(apartamentos.data) ? apartamentos.data.length : 0);
+        if (!isMorador) {
+          const [usuarios, apartamentos] = await Promise.all([
+            api.get("/Usuario/ExibirTodosUsuarios"),
+            api.get("/Apartamento/ExibirTodosApartamentos")
+          ]);
+          setTotalUsuarios(Array.isArray(usuarios.data) ? usuarios.data.length : 0);
+          setTotalApartamentos(Array.isArray(apartamentos.data) ? apartamentos.data.length : 0);
+        }
+
+        const entradas = await api.get(`/AcessoEntradaMorador/FiltrarEntradasAdmin?dataInicio=${hoje}`);
+        setTotalEntradas(Array.isArray(entradas.data) ? entradas.data.length : 0);
+
+        if (user?.usuarioId) {
+          const { data: totalAlertas } = await api.get(`/Notificacao/AlertasAtivos/${user.usuarioId}`);
+          setAlertasAtivos(totalAlertas);
+
+          // ✅ Buscar atividades recentes
+          const { data: atividades } = await api.get(`/Atividades/Recentes/${user.usuarioId}?limite=5`);
+          setAtividadesRecentes(atividades);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
       }
+    }
 
-      if (user?.usuarioId) {
+    if (user) fetchData();
+  }, [user]);
+
+
+  useEffect(() => {
+    if (abaQuery === "morador" || abaQuery === "sindico") {
+      setAbaAtiva(abaQuery as "morador" | "sindico");
+    }
+  }, [abaQuery]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const hoje = new Date().toISOString().split("T")[0];
+
+        if (!isMorador) {
+          const [usuarios, apartamentos] = await Promise.all([
+            api.get("/Usuario/ExibirTodosUsuarios"),
+            api.get("/Apartamento/ExibirTodosApartamentos")
+          ]);
+          setTotalUsuarios(Array.isArray(usuarios.data) ? usuarios.data.length : 0);
+          setTotalApartamentos(Array.isArray(apartamentos.data) ? apartamentos.data.length : 0);
+        }
+
+        if (user?.usuarioId) {
   const { data: totalAlertas } = await api.get(`/Notificacao/AlertasAtivos/${user.usuarioId}`);
   setAlertasAtivos(totalAlertas);
 }
 
 
-    } catch (error) {
-      console.error("Erro ao buscar dados:", error);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
     }
-  }
 
-  if (user) fetchData();
-}, [user]);
+    if (user) fetchData();
+  }, [user]);
 
   if (loading) {
     return (

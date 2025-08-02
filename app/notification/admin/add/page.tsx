@@ -32,20 +32,7 @@ export default function CriarNotificacaoDesktop() {
   const [mensagemSucesso, setMensagemSucesso] = useState("");
   const [mensagemErro, setMensagemErro] = useState("");
 
-  useEffect(() => {
-    if (tipo === "1" && filtroBloco && filtroNumero) {
-      buscarApartamentos(filtroBloco, filtroNumero);
-    }
-  }, [tipo, filtroBloco, filtroNumero]);
 
-  const buscarApartamentos = async (bloco: string, numero: string) => {
-    try {
-      const { data } = await api.get(`/Apartamento/BuscarPor?bloco=${bloco}&numero=${numero}`);
-      setApartamentosSugestoes(data);
-    } catch {
-      setApartamentosSugestoes([]);
-    }
-  };
 
   const criarNotificacao = async () => {
     if (!titulo || !mensagem || !tipo) {
@@ -65,15 +52,6 @@ export default function CriarNotificacaoDesktop() {
           setLoadingCriar(false);
           return;
         }
-
-        const { data } = await api.get(`/Apartamento/BuscarApartamentoPor?bloco=${filtroBloco}&numero=${filtroNumero}`);
-        if (!data || data.length === 0) {
-          setMensagemErro("Apartamento não encontrado. Verifique bloco e número.");
-          setLoadingCriar(false);
-          return;
-        }
-
-        apartamentoId = data[0].id;
       }
 
       await api.post("/Notificacao/CriarNotificacao", {
@@ -81,8 +59,9 @@ export default function CriarNotificacaoDesktop() {
         mensagem,
         tipo: parseInt(tipo),
         moradorOrigemId: user?.usuarioId,
-        apartamentoDestinoId: tipo === "1" ? apartamentoId : null,
         criadoPorSindico: false,
+        bloco: filtroBloco,
+        numero: filtroNumero,
       });
 
       setMensagemSucesso("Notificação criada com sucesso!");

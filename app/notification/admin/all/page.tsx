@@ -8,7 +8,8 @@ import { FaSearch } from "react-icons/fa";
 import { BsChevronDoubleLeft } from "react-icons/bs";
 import api from "@/services/api";
 import { Loader, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiSearch, FiFileText, FiUser } from "react-icons/fi";
+
 
 // Interfaces
 interface Notificacao {
@@ -111,6 +112,8 @@ export default function TodasNotificacoesPage() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
+  const [mostrarPopupRelatorio, setMostrarPopupRelatorio] = useState(false);
+
   // Mostrar lista após clicar em "Exibir todas"
   const [mostrarLista, setMostrarLista] = useState(false);
 
@@ -193,16 +196,92 @@ export default function TodasNotificacoesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* HEADER */}
-      <div className="sticky top-0 bg-white border-b shadow-sm flex items-center px-4 py-3 z-50">
+      {/* HEADER ATUALIZADO */}
+<div className="sticky top-0 z-20 bg-white border-b shadow-sm w-full">
+  <div className="px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+    <Button
+      type="button"
+      onClick={() => router.push("/home/desktop")}
+      variant="ghost"
+      className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-sm"
+    >
+      <BsChevronDoubleLeft size={16} /> Voltar
+    </Button>
+
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        onClick={() => setMostrarPopupRelatorio(true)}
+        variant="ghost"
+        className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-sm"
+      >
+        <FiFileText size={16} /> Gerar relatório
+      </Button>
+
+      {mostrarPopupRelatorio && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            {/* Botão de fechar */}
+            <button
+              onClick={() => setMostrarPopupRelatorio(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+            >
+              x
+            </button>
+      
+            <h2 className="text-lg text-center font-semibold mb-2 text-[#217346]">
+        Relatório gerado com sucesso
+      </h2>
+      
+      <p className="text-sm text-center text-gray-700 mb-6">
+        Clique no botão para fazer o download do arquivo.
+      </p>
+      
+      
+      <div className="flex justify-center">
         <Button
-          onClick={() => router.push("/home/desktop")}
-          variant="ghost"
-          className="flex items-center gap-2 text-gray-700"
+          className="bg-[#217346] hover:bg-[#1a5c38] text-white px-4 py-2 text-sm rounded"
+         onClick={async () => {
+        try {
+  const response = await api.get(
+    "/relatorios/notificacoes-completo",
+    { responseType: "blob" } // ESSENCIAL para arquivos binários
+  );
+
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "Relatorio_Notificacoes_Completo.xlsx");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setMostrarPopupRelatorio(false);
+} catch (error) {
+  console.error("Erro ao baixar relatório de notificações:", error);
+}
+
+      }}
+      
         >
-          <BsChevronDoubleLeft size={18} /> Voltar
+          Baixar Excel
         </Button>
-      </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      <Button
+        onClick={() => router.push("/notification/admin/add")}
+        className="bg-[#26c9a8] hover:bg-[#1fa98a] text-white px-4 py-2 text-sm rounded font-semibold"
+      >
+        + Nova notificação
+      </Button>
+    </div>
+  </div>
+</div>
+
 
       {/* CONTEÚDO */}
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">

@@ -23,16 +23,24 @@ import {
   BellRing,
   InboxIcon
 } from "lucide-react"
-import Cookies from "js-cookie"
+import api from "@/services/api"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
 
   const handleLogout = async () => {
-    await Cookies.remove('auth_token')
-    router.push('/login')
+  try {
+    await api.post("/Usuario/Logout");
+    // Aqui ele já envia o cookie por `withCredentials: true` que você configurou
+
+    // ✅ redireciona pro login após o backend deletar o cookie
+    router.push("/login");
+  } catch (err) {
+    console.error("Erro ao fazer logout:", err);
   }
+};
+
 
   return (
     <header className="bg-white shadow">
@@ -102,13 +110,6 @@ export function Header() {
 
           {/* Mobile buttons */}
           <div className="flex md:hidden items-center space-x-2">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                3
-              </span>
-            </Button>
-
             <Button
               variant="ghost"
               size="icon"

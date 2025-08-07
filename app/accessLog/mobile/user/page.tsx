@@ -91,9 +91,7 @@ const fetchAcessosVisitantes = async () => {
     if (data.length > 0) {
       setBloco(data[0].bloco || "-");
       setApartamento(data[0].apartamento || "-");
-    } else {
-      setMensagemErro("Nenhuma entrada encontrada para os filtros aplicados.");
-    }
+    } 
   } catch (err) {
     console.error("Erro ao buscar acessos visitantes:", err);
     setMensagemErro("Erro ao buscar entradas de visitantes.");
@@ -108,6 +106,8 @@ const fetchAcessosVisitantes = async () => {
   const handleBuscar = () => {
     setMensagemErro("");
     if (!dataInicio && !dataFim) {
+      setAcessosVisitantes([]);
+      setAcessosMoradores([]);
       setMensagemErro("Por favor, preencha pelo menos uma data para buscar.");
       return;
     }

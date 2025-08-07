@@ -11,7 +11,8 @@ import {
   Home,
   KeyRound,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  BellPlusIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoadingScreen from "@/services/loadingScreen";
@@ -71,6 +72,13 @@ export default function HomeMobile() {
   }
 
   useEffect(() => {
+  if (!isSindico) {
+    setAbaAtiva("morador");
+  }
+}, [isSindico]);
+
+
+  useEffect(() => {
     async function fetchData() {
       try {
         const hoje = new Date().toISOString().split("T")[0];
@@ -93,6 +101,7 @@ export default function HomeMobile() {
 
           // ✅ Buscar atividades recentes
           const { data: atividades } = await api.get(`/Atividades/Recentes/${user.usuarioId}?limite=5`);
+          console.log("🔍 Atividades recebidas:", atividades);
           setAtividadesRecentes(atividades);
         }
       } catch (error) {
@@ -169,6 +178,12 @@ export default function HomeMobile() {
   value={alertasAtivos}
   onClick={() => router.push("/notification/user")}
 />
+
+<StatCard
+        icon={<BellPlusIcon size={22} />}
+        label="Criar notificação"
+        onClick={() => router.push(`/notification/user/create`)}
+      />
 
     </div>
   );
